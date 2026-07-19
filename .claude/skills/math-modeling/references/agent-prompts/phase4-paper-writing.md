@@ -78,3 +78,106 @@
 ## 红线
 - 绝不引用虚假文献
 - 绝不放无分析的图表
+
+---
+
+## 附录：美赛 O 奖可复用写作模板
+
+以下模板来自 4 篇美赛 O 奖论文的分析结果，可直接套用。
+
+### 模板1：摘要开篇句（疑问句引入+比喻点题）
+
+```
+Players and spectators often wonder "what's going on" when [现象].
+[核心概念] is the [比喻词] behind these visible shifts,
+yet it is challenging to quantify.
+```
+
+**适用：** 摘要/引言第一句。用 stakeholders 的疑问引入，用比喻点出核心概念。
+
+### 模板2：分问题编号摘要结构
+
+```
+For Problem 1, we [propose/develop/apply] [模型名] to [解决什么], finding that [关键发现].
+For Problem 2, based on [上一步], we [进一步方法], which reveals that [关键结果].
+```
+
+**适用：** 美赛多任务摘要。每个 Problem 一句话方法+一句话结果。
+
+### 模板3：章节开头过渡句（承前+启后）
+
+```
+In the previous chapter, we have defined [前文核心概念] and conducted [前文分析].
+To further [本章目的], we will employ [本章方法] to [本章任务].
+```
+
+**适用：** 每章第一段。第一句回顾，第二句预告本章。
+
+### 模板4：模型选型理由句（Why 而非 What）
+
+```
+Considering that [问题特征], the [模型名] is a natural fit because [模型优势].
+Unlike [替代模型1] or [替代模型2], our chosen model [关键区别].
+```
+
+**适用：** 引入每个新模型前，给出选型理由。
+
+### 模板5：数据诊断驱动选型
+
+```
+The variance of [变量] is [数值], while the mean is [数值].
+This significant difference indicates [具体统计问题],
+rendering the [被淘汰模型] inappropriate.
+Therefore, we propose the [选用模型].
+```
+
+**适用：** 展示不是直接套模型，而是通过数据特征逐步选择。
+
+### 模板6：数值结果报告句（量化+评价）
+
+```
+Our model achieved [指标值] on [数据集], demonstrating [评价性表述].
+This represents [对比基准], confirming that [结论].
+```
+
+**适用：** 报告关键数值结果，数字+评价缺一不可。
+
+### 模板7：诚实表述研究结果（不过度吹嘘）
+
+```
+The [数据/结果] does not overwhelmingly [支持结论A];
+however, it does [暗示结论B], albeit [限定条件].
+```
+
+**适用：** 当结果不完美时，诚实表述但从中提取价值。
+
+### 模板8：灵敏度分析结论句
+
+```
+Across all [分组] combinations, the [指标] ranges from [最小值] to [最大值],
+with [趋势描述]. Importantly, all groups achieved [阈值],
+indicating that our model is robust to [参数变化].
+```
+
+**适用：** 灵敏度分析总结段。
+
+### 模板9：假设检验说明句
+
+```
+To verify the [假设] assumption, we employed [检验方法].
+The [诊断结果] shows [描述]. To address this, we applied [修正方法],
+yielding [修正系数]. After transformation, [改善情况].
+```
+
+**适用：** 模型假设不满足时的诊断与修复过程展示。
+
+### 模板10：反常识结论句
+
+```
+While conventional wisdom holds that [常识观点],
+our model reveals that [实际发现].
+This counterintuitive finding suggests that [启示],
+rather than [原有做法].
+```
+
+**适用：** 在结论中提炼反常识的洞察，美赛加分项。
