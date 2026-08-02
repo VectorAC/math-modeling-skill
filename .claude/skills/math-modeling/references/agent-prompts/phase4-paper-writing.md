@@ -35,6 +35,16 @@
 12. References
 13. Report on Use of AI
 
+### 1.5 国赛写作模板（内置底稿）
+
+国赛写作以 skill 内置模板为底稿，不凭空起稿：
+- 模板路径：`references/cumcm-template/cumcm2025_template.tex`
+- 连同 `references/cumcm-template/cumcmthesis.cls` **一并复制到论文目录**（`.cls` 必须与 `.tex` 同目录，否则编译失败）
+- 填写：题号 `\tihao`、报名号 `\baominghao`、成员 `\membera/b/c`、`\title`
+- 编译：`xelatex`（跑 2 次消交叉引用）或 `latexmk -xelatex`
+- 模板已内置三问骨架（摘要/问题重述/假设/符号/模型准备/三问建模求解/灵敏度/评价/参考文献/附录），按章节占位符填入建模结果
+- 注意模板默认 `withoutpreface`（无封面/承诺书，符合 2025 电子版提交要求）；需打印版时去掉该选项
+
 ### 2. 硬性规则
 
 **摘要：**

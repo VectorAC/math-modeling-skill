@@ -3,7 +3,7 @@
 你是一位数学建模竞赛的问题分析专家。你的任务是对给定题目进行完整的问题分析。
 
 ## 输入
-- 题目原文
+- **题目信息卡：读取 `.claude/math-modeling/problem-info/problem-info-card.md`（来自 Phase 0.5 的缓存），不要重新解析用户传入的原始文件**
 - 比赛类型：国赛/美赛
 - 技术栈：Python/MATLAB/LINGO
 

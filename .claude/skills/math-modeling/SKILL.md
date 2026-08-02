@@ -26,6 +26,7 @@ description: 数学建模全流程辅助——支持国赛(CUMCM)和美赛(MCM/I
 - 美赛 / MCM / ICM / 美国大学生数学建模竞赛
 - 数学建模 / 建模竞赛 / 数学建模论文
 - 题目包含明显的建模问题描述（有约束条件、目标函数、数据集等）
+- **传入 `.pdf` / `.docx` / `.xlsx` / `.txt` / `.csv` 等题目文件** → 询问是否启用，并提示先跑「Phase 0.5 题目信息获取」
 
 **手动触发：** 用户输入 `/math-modeling`
 
@@ -60,6 +61,7 @@ description: 数学建模全流程辅助——支持国赛(CUMCM)和美赛(MCM/I
 - 技术栈检测与确认（Python/MATLAB/LINGO/R）
 - 依赖 skill 扫描（subagent-driven-development、dispatching-parallel-agents、verification-before-completion）
 - 需求确认（题目理解、方法偏好、数据情况、输出要求）
+- **项目文件夹确认：创建项目总文件夹前必须询问用户存放位置，未确认前不创建任何项目目录**
 
 依赖缺失时的报告格式（每个缺失项单独说明）：
 
@@ -72,6 +74,27 @@ description: 数学建模全流程辅助——支持国赛(CUMCM)和美赛(MCM/I
 初始化完成后输出状态报告，定位为教学辅助。
 
 **Phase 过渡：** 完成本阶段后，将初始化结果写入 `.claude/math-modeling/checkpoint.json`。下个 Phase 启动时先读取该 checkpoint，确保状态连续。
+
+### Phase 0.5：题目信息获取（子 agent）
+
+**目的：** 用户传入的题目文件（PDF/Word/Excel/txt/csv）**一次性抽取**成结构化题目信息卡，后续所有阶段只读缓存，不再重复解析原文件。
+
+子 agent 使用 `references/agent-prompts/phase05-problem-info.md` 模板，执行：
+1. 逐文件运行 `references/scripts/extract_input.py`（按扩展名自动分派：PDF→pdftotext、docx/xlsx→officecli、txt/csv→直读）
+2. 汇总产出 `.claude/math-modeling/problem-info/problem-info-card.md`：文件清单 → 题目原文（逐字）→ 数据表 → 附录/背景 → 未提取/存疑清单
+3. 向用户核对题目完整性、关键数字与数据表，存疑项（扫描版/乱码）给处理建议
+4. 将摘要写入 checkpoint.json 的 `problem_info` 段（含 `card_path`）
+
+质量门：
+- 每个输入文件都有抽取结果且状态明确？
+- 题目原文完整无删改？
+- 关键数字/表格齐全？
+- 存疑项已列清单并给出建议？
+- 用户已确认信息卡？
+
+交付物：`problem-info-card.md` + 抽取状态摘要
+
+**Phase 过渡：** 完成本阶段后，将摘要写入 `.claude/math-modeling/checkpoint.json` 的 `problem_info` 段。Phase 1 起所有阶段只读该卡，**不得重新解析原始文件**。
 
 ### Phase 1：问题分析（子 agent）
 
@@ -129,6 +152,7 @@ Loop：生成 → 审阅 → 修改 → 用户确认
 - 完整的注释和依赖声明
 - 运行调试 + 结果可视化
 - 子 sub-agent 审查代码质量
+- **运行环境固定放 D 盘**：venv 统一建在 `D:\software\code_cpp\.venv\`（或项目总文件夹下 `env/`），pip cache 设到 D 盘；不在 C 盘建环境
 
 质量门：
 - 代码是否可运行？
@@ -144,6 +168,7 @@ Loop：生成 → 审阅 → 修改 → 用户确认
 
 子 agent 任务：
 - 按比赛模板生成初稿
+- **国赛模板（内置）**：以 `references/cumcm-template/cumcm2025_template.tex` 为底稿，连同 `cumcmthesis.cls` 一并复制到论文目录（`.cls` 必须与 `.tex` 同目录），填入题号/报名号/成员信息，`xelatex` 或 `latexmk -xelatex` 编译
 - 引用管理硬规则：
   - 每篇参考文献必须真实存在，禁止编造
   - 宁少勿假：5 篇真实 > 20 篇编造
@@ -235,7 +260,8 @@ Loop：生成 → 审阅 → 修改 → 用户确认
 2. 主上下文只保留摘要（3-5 行 + 关键决策点）
 3. 用户关键选择原文保留不压缩
 4. 当前阶段完整上下文保留
-5. 提示用户：已归档已完成阶段，继续当前阶段
+5. 题目信息卡（problem-info-card.md）摘要保留在主上下文，原始提取物（.claude/math-modeling/problem-info/raw/）归档
+6. 提示用户：已归档已完成阶段，继续当前阶段
 
 ## AI/CS 打法 vs 统计/数学打法
 
@@ -302,6 +328,11 @@ Loop：生成 → 审阅 → 修改 → 用户确认
 外部技能：
 - analyze-mcm-paper：分析美赛论文提取写作指导
   调用：/analyze-mcm-paper <论文路径>
+
+外部工具（Phase 0.5 题目信息获取用，缺失时提示安装、不阻塞主流程）：
+- officecli：抽取 .docx/.xlsx（`officecli view <f> text` / `--json`），不处理 PDF
+- pdftotext（poppler）：抽取 .pdf；python 端 pypdf 兜底
+- 安装方式见 `references/agent-prompts/phase05-problem-info.md` 与对应 skill
 
 ## 快速参考：国赛 vs 美赛
 
