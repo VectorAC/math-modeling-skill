@@ -91,7 +91,9 @@
 - **所有三线表加 `\setlength{\tabcolsep}{}`**（默认 6pt，方便调宽度；可整体调或逐表调）
 
 **多人协作：按题拆部件（可选但推荐）**
-- 多人分工时，论文按题拆成部件（Q1/Q2/Q3/公有），每人一个部件文件，改完后在组装空间拼接
+- **生成时机（写作开始时）**：先问用户「单人还是多人协作？」
+  - 单人：正常生成单文件初稿，跳过部件
+  - 多人：先生成 4 个部件骨架（part_q1/q2/q3/common.tex）+ 每人一个 `preview_qN.tex`，**初稿直接按题写入各部件**（不要先写单文件再拆），成员各改各的、各编译各的 preview，改完交回后在组装空间拼接
 - 部件骨架模板见 `references/assembly/part-template.tex`（锚点注释 + label 前缀约定），preview 骨架见 `references/assembly/preview-template.tex`（每人可独立编译预览自己的部件）
 - 组装规则见 `references/assembly-space.md`——**组装只做结构拼接，不动正文内容**
 
