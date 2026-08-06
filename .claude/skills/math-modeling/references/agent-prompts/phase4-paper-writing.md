@@ -93,9 +93,20 @@
 **多人协作：按题拆部件（可选但推荐）**
 - **生成时机（写作开始时）**：先问用户「单人还是多人协作？」
   - 单人：正常生成单文件初稿，跳过部件
-  - 多人：先生成 **N+1 个部件骨架**（N = 题目数量；part_q1…part_qN + part_common.tex）+ 每人一个 `preview_qN.tex`，**初稿直接按题写入各部件**（不要先写单文件再拆），成员各改各的、各编译各的 preview，改完交回后在组装空间拼接
+  - 多人：先生成 **N+1 个分发文件夹**（N = 题目数量；`part_q1_分发/` … `part_qN_分发/` + `part_common_分发/`），每个文件夹 = 给一个队友的全部文件，用户可直接整个文件夹发给队友：
+    ```
+    part_q1_分发/
+    ├── README.md               ← 文件夹说明（固定格式，见下）
+    ├── part_q1.tex             ← 该题部件（队友负责修改）
+    ├── preview_q1.tex          ← 预览骨架（独立编译看效果）
+    ├── part_q1_background.md   ← 该题背景材料
+    └── code_q1/                ← 该题算法代码 + 数据文件副本
+    ```
+  - **README.md 固定格式**：文件清单表（每个文件：是什么 / 要不要改 / 改完是否交回）+ 使用方法（①编译 preview 看效果 ②有疑问拿 background.md 问 AI ③改完交回哪几个文件）
+  - **part_qN_background.md 背景材料**（模板见 `references/assembly/part-background-template.md`）：按题组装 ①题目原文逐字摘录（含共用背景段）②硬约束清单/关键假设 ③Phase 1 该题分析摘要 ④建模与算法信息（Phase 2 选定模型/数学表达/求解思路 + Phase 3 实现方式）⑤关键代码片段（md 内嵌代码块；完整代码复制到 code_qN/ 随附并写明路径与用途；二进制数据文件无法嵌 md，以路径引用 + 副本解决）；公共背景（数据总说明）放 `part_common_background.md`
+  - **初稿直接按题写入各部件**（不要先写单文件再拆），成员各改各的、各编译各的 preview，改完交回后在组装空间拼接
 - 部件骨架模板见 `references/assembly/part-template.tex`（锚点注释 + label 前缀约定），preview 骨架见 `references/assembly/preview-template.tex`（每人可独立编译预览自己的部件）
-- 组装规则见 `references/assembly-space.md`——**组装只做结构拼接，不动正文内容**
+- 组装规则见 `references/assembly-space.md`——**组装只做结构拼接，不动正文内容**（分发文件夹仅作分发参考，不参与组装）
 
 **内容篇幅：**
 - **国赛正文页数下限**：3 个问题 >= 28 页，5 个问题 >= 30 页（不含摘要、目录、附录、参考文献）

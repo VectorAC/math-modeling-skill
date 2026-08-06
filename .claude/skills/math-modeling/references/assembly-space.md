@@ -21,6 +21,7 @@
 - 部件文件：`part_q1.tex` … `part_qN.tex`（N = 题目数量）+ `part_common.tex`（命名约定见 `references/assembly/part-template.tex`）
 - 主模板：`references/cumcm-template/cumcm2025_template.tex` + `cumcmthesis.cls`
 - 图片文件（各部件引用的 figures）
+- 分发文件夹（`part_q1_分发/` 等，含 README / 背景材料 / code_qN）**只作分发参考，不参与组装**——组装只接收部件文件、模板与图片
 
 ## 执行步骤
 
