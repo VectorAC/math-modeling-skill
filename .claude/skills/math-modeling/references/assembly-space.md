@@ -18,7 +18,7 @@
 
 ## 输入
 
-- 部件文件：`part_q1.tex`、`part_q2.tex`、`part_q3.tex`、`part_common.tex`（命名约定见 `references/assembly/part-template.tex`）
+- 部件文件：`part_q1.tex` … `part_qN.tex`（N = 题目数量）+ `part_common.tex`（命名约定见 `references/assembly/part-template.tex`）
 - 主模板：`references/cumcm-template/cumcm2025_template.tex` + `cumcmthesis.cls`
 - 图片文件（各部件引用的 figures）
 

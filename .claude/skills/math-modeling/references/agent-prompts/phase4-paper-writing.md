@@ -93,7 +93,7 @@
 **多人协作：按题拆部件（可选但推荐）**
 - **生成时机（写作开始时）**：先问用户「单人还是多人协作？」
   - 单人：正常生成单文件初稿，跳过部件
-  - 多人：先生成 4 个部件骨架（part_q1/q2/q3/common.tex）+ 每人一个 `preview_qN.tex`，**初稿直接按题写入各部件**（不要先写单文件再拆），成员各改各的、各编译各的 preview，改完交回后在组装空间拼接
+  - 多人：先生成 **N+1 个部件骨架**（N = 题目数量；part_q1…part_qN + part_common.tex）+ 每人一个 `preview_qN.tex`，**初稿直接按题写入各部件**（不要先写单文件再拆），成员各改各的、各编译各的 preview，改完交回后在组装空间拼接
 - 部件骨架模板见 `references/assembly/part-template.tex`（锚点注释 + label 前缀约定），preview 骨架见 `references/assembly/preview-template.tex`（每人可独立编译预览自己的部件）
 - 组装规则见 `references/assembly-space.md`——**组装只做结构拼接，不动正文内容**
 

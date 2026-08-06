@@ -192,7 +192,7 @@ Loop：生成 → 审阅 → 修改 → 用户确认
 子 agent 任务：
 - **协作模式询问（写作开始前）**：先问「本次单人还是多人协作？」
   - **单人**：正常生成单文件初稿，跳过部件
-  - **多人**：先生成 4 个部件骨架（`references/assembly/part-template.tex`：part_q1/q2/q3/common.tex，按题含摘要句组/重述/分析/建模/求解/结果/附录锚点）+ 每人一个 `preview_qN.tex`（独立编译预览），**初稿直接按题写入各部件**；成员各改各的部件、各编译各的 preview；改完交回后由组装空间拼接（见「组装空间」节）
+  - **多人**：先生成 **N+1 个部件骨架**（N = 题目数量；`references/assembly/part-template.tex`：part_q1…part_qN + part_common.tex，按题含摘要句组/重述/分析/建模/求解/结果/附录锚点）+ 每人一个 `preview_qN.tex`（独立编译预览），**初稿直接按题写入各部件**；成员各改各的部件、各编译各的 preview；改完交回后由组装空间拼接（见「组装空间」节）
 - 按比赛模板生成初稿
 - **国赛模板（内置）**：以 `references/cumcm-template/cumcm2025_template.tex` 为底稿，连同 `cumcmthesis.cls` 一并复制到论文目录（`.cls` 必须与 `.tex` 同目录），填入题号/报名号/成员信息，`xelatex` 或 `latexmk -xelatex` 编译
 - 引用管理硬规则：
