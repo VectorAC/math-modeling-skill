@@ -30,6 +30,8 @@
 - 数学表达：（用 Unicode 数学符号或口语化描述，**不用 LaTeX 命令**）
 - 求解思路：
 - 实现方式：（库 / 核心函数 / 参数含义）
+- 运行环境：（venv 位置 / 安装命令 `pip install -r requirements.txt` / 运行命令，详见顶层 README「运行环境」段）
+- 创新点陈述：（灵感来源 + 核心构成 + 与常规方法的区别，来自 Phase 2 checkpoint，正文不得改写/夸大）
 
 ## 6. 配套文件清单
 
@@ -39,6 +41,9 @@
 | `preview_qN.tex` | 独立编译预览效果 | 否 | 否 |
 | `code_qN/xxx.py` | 该题求解代码（完整版） | 视情况 | 是 |
 | `code_qN/xxx.csv` | 该题数据文件 | 视情况 | 是 |
+| `code_qN/requirements.txt` | 依赖清单（安装用） | 视情况 | 是 |
+| `03_qN_results.md` | 该题 Phase 3 结果文件副本 | 否 | 否 |
+| `paper-framework.md` | 论文总框架副本（结构/命名/术语约定） | 否 | 否 |
 | `README.md` | 本文件夹说明 | 否 | 否 |
 
 （数据文件为二进制/大文件时无法嵌进本 md，以上表路径引用 + 副本随附解决）

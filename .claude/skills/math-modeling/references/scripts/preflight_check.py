@@ -5,7 +5,7 @@
   [L1] 残留占位符（【】/TODO/FIXME/占位/待补/这里插入 等）
   [L2] \\includegraphics 引用的图片文件不存在
   [L2] \\ref/\\cref/\\eqref 引用无对应 \\label
-  [L2] 摘要区（abstract 环境或"摘要"章节）含公式
+  [L2] 摘要区公式数量超上限（国赛 ≤2 / 美赛 ≤3，允许核心公式简写版）
   [L2] 中文行内半角标点（汉字,;:?!汉字）
 
 用法:  python preflight_check.py main.tex [part_q1.tex ...]
@@ -22,27 +22,39 @@ PLACEHOLDER = re.compile(r"【[^】]*】|TODO|FIXME|占位|待补|待插入|这�
 GRAPHICS = re.compile(r"\\includegraphics(?:\[[^\]]*\])?\{([^}]+)\}")
 LABEL = re.compile(r"\\label\{([^}]+)\}")
 REF = re.compile(r"\\\w*ref\{([^}]+)\}")
-MATH_INLINE = re.compile(r"[^\\]\$")
-MATH_DISPLAY = re.compile(r"\\\[\s|\\begin\{(equation|align|gather)\*?\}")
+MATH_DISPLAY = re.compile(r"\\\[|\\begin\{(equation|align|gather)\*?\}")
+INLINE_DOLLAR = re.compile(r"(?<!\\)\$")  # 行内公式 $..$（排除转义 \$），成对计数
 HALF_WIDTH_PUNCT = re.compile(r"[\u4e00-\u9fa5][,;:?!][\u4e00-\u9fa5]")
 IMG_EXTS = (".pdf", ".png", ".jpg", ".jpeg", ".eps", ".svg")
 
-ABSTRACT_BEGIN = re.compile(r"\\begin\{abstract\}|\\section\*?\{摘要\}")
-ABSTRACT_END = re.compile(r"\\end\{abstract\}|\\section\*?\{")
+# 摘要区识别：国赛模板的摘要节也用 \begin{abstract}（cumcmthesis.cls 重定义），
+# 故按 \documentclass{cumcmthesis} 判国赛，否则按环境类型判。
+ABSTRACT_BEGIN_MCM = re.compile(r"\\begin\{abstract\}")
+ABSTRACT_END_MCM = re.compile(r"\\end\{abstract\}")
+ABSTRACT_BEGIN_CUMCM = re.compile(r"\\section\*?\{摘要\}")
+ABSTRACT_END_CUMCM = re.compile(r"\\section\*?\{")
+DOCUMENTCLASS_CUMCM = re.compile(r"\\documentclass(?:\[[^\]]*\])?\{cumcmthesis\}")
+ABSTRACT_FORMULA_LIMIT = {"cumcm": 2, "mcm": 3}
 GRAPHICSPATH = re.compile(r"\\graphicspath\{((?:\{[^}]*\})+)\}")
 
 
 def find_abstract_ranges(lines):
-    """返回 (start, end) 列表（0 基行号，end 不含）。"""
-    ranges, start = [], None
+    """返回 (start, end, kind) 列表（0 基行号，end 不含）。kind: 'cumcm' | 'mcm'。"""
+    is_cumcm_doc = any(DOCUMENTCLASS_CUMCM.search(line) for line in lines)
+    ranges, start, kind = [], None, None
     for i, line in enumerate(lines):
-        if start is None and ABSTRACT_BEGIN.search(line):
-            start = i
-        elif start is not None and ABSTRACT_END.search(line):
-            ranges.append((start, i))
-            start = None
+        if start is None:
+            if ABSTRACT_BEGIN_CUMCM.search(line):
+                start, kind = i, "cumcm"
+            elif ABSTRACT_BEGIN_MCM.search(line):
+                start, kind = i, "cumcm" if is_cumcm_doc else "mcm"
+        else:
+            end_pat = ABSTRACT_END_CUMCM if kind == "cumcm" else ABSTRACT_END_MCM
+            if end_pat.search(line):
+                ranges.append((start, i, kind))
+                start, kind = None, None
     if start is not None:
-        ranges.append((start, len(lines)))
+        ranges.append((start, len(lines), kind))
     return ranges
 
 
@@ -102,13 +114,22 @@ def check_file(path):
         for lab in LABEL.findall(line):
             labels.add(lab)
 
-        if any(s <= n - 1 < e for s, e in abs_ranges):
-            if MATH_INLINE.search(line) or MATH_DISPLAY.search(line):
-                print(f"{path}:{n}: [L2] 摘要区含公式")
-                issues += 1
-
         for m in HALF_WIDTH_PUNCT.finditer(line):
             print(f"{path}:{n}: [L2] 中文行内半角标点：…{m.group(0)}…（改用全角）")
+            issues += 1
+
+    # 摘要区公式数量：按赛别阈值（国赛 ≤2 / 美赛 ≤3），允许核心公式简写版
+    for s, e, kind in abs_ranges:
+        limit = ABSTRACT_FORMULA_LIMIT[kind]
+        count = 0
+        for raw in lines[s:e]:
+            line = raw.rstrip("\n")
+            if line.lstrip().startswith("%"):
+                continue
+            count += len(INLINE_DOLLAR.findall(line)) // 2  # $..$ 成对
+            count += len(MATH_DISPLAY.findall(line))  # \[ / equation / align / gather
+        if count > limit:
+            print(f"{path}: 摘要区（{kind}）含 {count} 个公式，超过上限 {limit}（国赛 ≤2 / 美赛 ≤3），请精简为核心公式简写版")
             issues += 1
 
     for r in sorted(refs - labels):
@@ -126,7 +147,7 @@ def main(argv):
     if total:
         print(f"\n共 {total} 个问题。L1（占位符）未清除前不得声称论文完成；L2 全部修复后再编译。")
         return 1
-    print("预检通过：无占位符、无缺失图片、无悬空引用、摘要无公式、标点规范。")
+    print("预检通过：无占位符、无缺失图片、无悬空引用、摘要公式数量符合标准、标点规范。")
     return 0
 
 
