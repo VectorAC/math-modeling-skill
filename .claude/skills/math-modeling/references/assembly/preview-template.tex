@@ -7,6 +7,8 @@
 %  用法：
 %  1. 复制 main 模板的 preamble（\documentclass + \usepackage 部分）
 %     到此文件；编译需要 cumcmthesis.cls 与部件文件同目录。
+%     preamble 必须与 main.tex 一致（含 \scite 等命令定义、三线表宏包），
+%     否则部件里能用的命令在组装后可能失效。
 %  2. 把 \input{part_qN.tex} 换成自己的部件文件名。
 %  3. latexmk -xelatex preview_q1.tex
 %

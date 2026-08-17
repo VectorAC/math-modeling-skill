@@ -33,5 +33,5 @@
 - [ ] 标题是否在 Summar Sheet 第一行？
 - [ ] 队伍编号是否在每页页眉？
 - [ ] Memorandum（信函）是否单独成章？
-- [ ] Report on Use of AI 是否包含？
+- [ ] Report on Use of AI 是否包含？（内容由用户自行记录提供，AI 只协助排版）
 - [ ] 是否说明所有数据来源？
