@@ -13,12 +13,12 @@
 
 - **先读 `.claude/math-modeling/checkpoint.json`**，核对声称的产物与磁盘实际一致（含 Phase 3 写入的 `tri_check` 关键数字段）
 - **形态判断**：单人 → 论文初稿即成品，直接进入验证清单；多人 → 组装空间已完成交回核对（步骤 0）与拼接，先执行下方「多人专项」，再进入验证清单
-- **脚本门禁先行（机械检查，不替代人工判断）**：
+- **脚本门禁先行（机械检查，不替代人工判断，针对组装后的产物）**：
   1. `preflight_check.py main.tex [部件...] [--log 编译日志]` —— L1 未清除不得声称完成，L2 修复后再编译；`--log` 自动报告页数与 Missing character 缺字形
   2. `citecheck.py main.tex [部件...]` —— 引用机制统一 + \scite 编号越界（拦第三次模拟 9 处错位类问题）
   3. `combinecheck.py main.tex [部件...]` —— 跨部件 \ref 解析率 100%、label 重复/前缀/孤立
   4. `tricheck.py checkpoint.json main.tex` —— 三方核对半自动，MANUAL 项交人工复核
-  5. 多人模式组装前：`handback-check.py --dist <分发目录> --ret <交回目录>`（替代组装空间步骤 0 的人工结构 diff）
+  - 注：`handback-check.py`（交回核对）属**组装空间步骤 0**（组装前执行，见 assembly-space.md），Phase 5 时组装已完成、只跑上述 4 项
 
 ## 多人专项（仅多人模式，组装后执行）
 
