@@ -9,6 +9,18 @@
 - 图表文件
 - 原始数据（附件 csv/xlsx）
 
+## 工具面（提示词级约束）
+
+本 agent 的工具面 = **读写 + 脚本白名单**。
+- 允许：Read / Glob / Grep + Write/Edit（仅限验证报告与 checkpoint 回写）+ Bash 仅限：
+  4 个检查脚本（`preflight_check.py` / `citecheck.py` / `combinecheck.py` / `tricheck.py`）与 `xelatex` / `latexmk` 编译
+- **禁止修改 Phase 3 产物与论文正文**（发现数字/结果问题 → 报告主 agent，由主 agent 决定修复路径）
+- 说明：这是提示词级工具面——白名单外的命令需主 agent 明确授权
+
+## 质量门来源
+
+自行 Read `references/checklists/quality-gates.md` 的「Phase 5：最终验证」节，逐条核对；本阶段核心门禁 2 条：4 个检查脚本通过；三方核对（tricheck）通过或 MANUAL 项已人工复核。
+
 ## 验证前
 
 - **先读 `.claude/math-modeling/checkpoint.json`**，核对声称的产物与磁盘实际一致（含 Phase 3 写入的 `tri_check` 关键数字段）
@@ -103,6 +115,20 @@
 
 ### 9. 输出格式
 返回验证结果，每条为：通过/不通过 + 问题描述 + 修改建议
+
+## 过渡
+将最终验证结果写入 `.claude/math-modeling/checkpoint.json`：
+
+```json
+{
+  "phase": "5",
+  "final_verdict": "pass | fail",
+  "issues": ["<问题清单>"],
+  "page_count": "<实际编译页数>"
+}
+```
+
+页数等事实以实际编译产物（main.pdf + main.log）为准回写。写入动作由主 agent 执行，本模板声明字段契约。
 
 ## 红线
 - 不放过任何一个不通过项

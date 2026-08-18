@@ -5,6 +5,18 @@
 ## 输入
 - 用户原始输入
 
+## 工具面（提示词级约束）
+
+本 agent 的工具面 = **只读**。
+- 允许：Read / Glob / Grep（可用只读 Bash 如 ls 确认环境，不解析文件内容）
+- 禁止：运行代码（python/matlab 等任何执行）、创建/修改/删除任何文件（Write/Edit/重定向）
+- 原因：本阶段产出是模式/需求确认与决策，不是代码
+- 说明：这是提示词级工具面——Claude Code 不会动态修改你的工具注册表，即使你看到执行类工具可用，未经主 agent 明确授权单条命令也不得使用
+
+## 质量门来源
+
+自行 Read `references/checklists/quality-gates.md` 的「Phase 0：初始化」节，逐条核对本阶段交付；本阶段核心门禁 2 条：比赛模式已确认；项目目录位置已与用户确认（未确认不创建目录）。
+
 ## 输出要求
 
 ### 1. 比赛模式检测
@@ -83,6 +95,20 @@
 - 需求确认结果（用户偏好摘要）
 - 项目文件夹位置（已确认路径）
 - 初始化完成：是/否
+
+## 过渡
+将初始化结果写入 `.claude/math-modeling/checkpoint.json`：
+
+```json
+{
+  "phase": "0",
+  "mode": "cumcm | mcm | general",
+  "tech_stack": "python | matlab | lingo",
+  "project_dir": "<用户确认的项目总文件夹>"
+}
+```
+
+写入动作由主 agent 执行，本模板声明字段契约。
 
 ## 红线
 - 不跳过比赛模式确认

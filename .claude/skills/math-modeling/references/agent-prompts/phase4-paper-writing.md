@@ -10,6 +10,18 @@
 - 建模实现结果（Phase 3 的代码 + 图表 + 数值结果）
 - 用户风格偏好
 
+## 工具面（提示词级约束）
+
+本 agent 的工具面 = **读写 + 脚本白名单**。
+- 允许：Read / Glob / Grep + Write/Edit（论文文件、docs/ 说明文件）+ Bash 仅限：
+  预检/核对脚本（`preflight_check.py` / `citecheck.py` / `combinecheck.py` / `tricheck.py`）与 `xelatex` / `latexmk` 编译
+- **禁止修改 Phase 3 产物**（03_qN_results.md、fig_*.m、代码、results/ 输出）——只读引用，发现问题报告主 agent（由主 agent 决定是否回 Phase 3 修复重跑）
+- 说明：这是提示词级工具面——白名单外的命令需主 agent 明确授权
+
+## 质量门来源
+
+自行 Read `references/checklists/quality-gates.md` 的「Phase 4：论文写作」节，逐条核对；本阶段核心门禁 2 条：写作前必读已完成（美赛 2401445 必读 + 同题型按需）；正文无"创新点/我们创新地"字样且引用率 100%。
+
 ## 写作前必读清单（按赛区分级，强制阅读门禁）
 
 开始写作前按下列规则完成阅读。阅读标题、文件名、历史对话或模型记忆均不算完成阅读；清单未完成不得开始写作。
@@ -130,7 +142,7 @@
     ├── part_q1.tex             ← 该题部件（队友负责修改）
     ├── preview_q1.tex          ← 预览骨架（独立编译看效果）
     ├── part_q1_background.md   ← 该题背景材料
-    ├── 03_q1_results.md        ← Phase 3 该题结果文件副本（03_qN_results.md 命名见 SKILL.md Phase 3 交付物）
+    ├── 03_q1_results.md        ← Phase 3 该题结果文件副本（命名见 phase3-implementation.md「交付物与命名」节，勿改名）
     └── code_q1/                ← 该题算法代码 + 每张图的 fig_*.m 制图脚本 + 数据文件副本
         └── requirements.txt    ← 依赖清单（库名+版本，pip install -r 安装）
     ```
@@ -188,6 +200,20 @@
 
 ### 3. 输出格式
 返回论文核心章节摘要、参考文献列表、待确认事项
+
+## 过渡
+将论文状态摘要写入 `.claude/math-modeling/checkpoint.json`：
+
+```json
+{
+  "phase": "4",
+  "chapters_done": {"<章节>": "<完成度>"},
+  "figures": ["<图表清单>"],
+  "framework_path": "<多人模式的 paper-framework.md 路径>"
+}
+```
+
+写入动作由主 agent 执行，本模板声明字段契约。
 
 **md 交付物公式书写：** 所有 .md 文件/汇报中的公式用 Unicode 数学符号或口语化描述（σ̂、p̂、ρ、≤），**不用 LaTeX 命令**（终端不渲染会乱码）；LaTeX 命令只出现在 .tex 文件里。
 

@@ -9,6 +9,18 @@
 - 技术栈：Python/MATLAB/LINGO
 - 比赛类型：国赛/美赛
 
+## 工具面（提示词级约束）
+
+本 agent 的工具面 = **执行**。
+- 允许：Read / Glob / Grep + Bash（python/matlab 运行与调试）+ Write/Edit
+- 写入范围：只写项目总文件夹（<项目总目录>）与 `.claude/math-modeling/` 内交付物（代码/结果/fig_*.m）；**不碰 references/ 与其他项目**
+- 运行纪律：先冒烟后全量；>30min 拆片+每片汇报；启动前查杀僵尸进程；venv 固定 D 盘
+- 说明：这是提示词级工具面——注册表不会收窄；每次运行前先说明「要跑什么/预计多久/结果如何判定」
+
+## 质量门来源
+
+自行 Read `references/checklists/quality-gates.md` 的「Phase 3：建模实现」节，逐条核对；本阶段核心门禁 2 条：冒烟测试先于全量（含硬约束逐条核对）；tri_check 关键数字清单已交付。
+
 ## 输出要求
 
 ### 1. 代码生成
@@ -61,6 +73,10 @@
 # 安装方式：pip install numpy matplotlib scipy
 ```
 
+### 4.5 交付物与命名
+
+结果交付物命名**按题号统一**：`<项目总目录>/03_q1_results.md` / `03_q2_results.md` / `03_q3_results.md`（题号顺序，不按完成顺序）——Phase 4 写作、分发文件夹、Phase 5 三方核对都按此路径引用，命名不得改。每图一个独立制图脚本 `fig_qN_xxx.m`（一张图一个文件），脚本头部注释写图注，随代码包交付。
+
 ### 5. 输出格式
 交予主 agent 时返回：
 - 代码可运行状态：是/否
@@ -68,6 +84,23 @@
 - 如果代码有问题：问题描述 + 修复状态
 - 长任务（若有）：分片进度记录 + 每片汇报内容
 - **tri_check 关键数字清单**：每个交付的核心数字一条 {key 描述词, value, unit, source 结果文件路径, tol 相对容差}，主 agent 写入 checkpoint.json 的 `tri_check` 段（Phase 5 三方核对机械比对用，如 {"key": "有效长度标定", "value": 118.3707, "unit": "cm", "source": "03_q1_results.md", "tol": 0.001}）
+
+## 过渡
+将实现结果摘要写入 `.claude/math-modeling/checkpoint.json`：
+
+```json
+{
+  "phase": "3",
+  "code_status": "<可运行: 是/否>",
+  "core_results": "<核心数值结果摘要>",
+  "figures": ["<图表清单>"],
+  "tri_check": [
+    {"key": "有效长度标定", "value": 118.3707, "unit": "cm", "source": "03_q1_results.md", "tol": 0.001}
+  ]
+}
+```
+
+`tri_check` 段为 Phase 5 三方核对机械比对提供数据（tricheck.py 读取），每个交付的核心数字必须一条，key 用论文可能出现的描述词。写入动作由主 agent 执行，本模板声明字段契约。
 
 ## 红线
 - 不要交付未经运行的代码
