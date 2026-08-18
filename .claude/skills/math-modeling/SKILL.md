@@ -335,7 +335,7 @@ Loop：生成 → 审阅 → 修改 → 用户确认
 - 「组装论文」
 - 「把部件拼成论文」
 
-组装空间行为规则详见 `references/assembly-space.md`，核心原则：**只做结构拼接 + 编译，不动任何正文内容**（文字/数字/公式/图片一律冻结；只能修结构命令）。**进入组装空间后先向用户说明将做什么（交回核对 + 拼接 + 编译），确认后再动手**；组装默认输出单文件 main.tex（preamble 内联各部件，部件内容前保留锚点注释行便于定位），重跑组装会覆盖对 main.tex 的手改。配套部件骨架见 `references/assembly/`。
+组装空间行为规则详见 `references/assembly-space.md`，核心原则：**只做结构拼接 + 编译，不动任何正文内容**（文字/数字/公式/图片一律冻结；只能修结构命令）。**组装三依据**：结构以 `paper-framework.md` 为准、格式以 `references/checklists/contest-format.md` 为准、骨架以 `cumcm2025_template.tex` 为准。**进入组装空间后先向用户说明将做什么（交回核对 + 拼接 + 编译），确认后再动手**；组装默认输出单文件 main.tex（preamble 内联各部件，部件内容前保留锚点注释行便于定位），重跑组装会覆盖对 main.tex 的手改。配套部件骨架见 `references/assembly/`。
 
 ## AI 交互记录（用户自行记录，AI 不主动收集）
 
