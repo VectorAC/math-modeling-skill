@@ -1325,10 +1325,10 @@ window.__ModuleLoader__.load({
 			// reasoning text reads in the brand secondary color
 			[boost("[class$=\"_thinkBody\"]"), "  color: var(--dsw-alias-brand-text);"],
 			// code blocks: rounded border + brand accent bar
-			[boost("[class*=\"_codeBlock\"]"), "  border: 1px solid var(--dsw-alias-border-l2); border-radius: 12px; overflow: hidden; box-shadow: inset 3px 0 0 var(--dsw-alias-brand-primary);"],
-			// glass blur on sidebar + composer so the wallpaper visibly blurs behind panels
-			[boost("[class$=\"_sidebarCol\"]"), "  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);"],
-			[boost("[class$=\"_composerCol\"]"), "  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);"]
+			[boost("[class*=\"_codeBlock\"]"), "  border: 1px solid var(--dsw-alias-border-l2); border-radius: 12px; overflow: hidden; box-shadow: inset 3px 0 0 var(--dsw-alias-brand-primary);"]
+			// NOTE: no backdrop-filter on guessed layout classes — it traps
+			// position:fixed descendants and breaks overlay pages (settings).
+			// The glass look comes from the translucent tokens alone.
 		].map(([selector, body]) => `${selector} {\n${body}\n}`).join("\n");
 		//#endregion
 
