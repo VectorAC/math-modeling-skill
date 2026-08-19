@@ -25,7 +25,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const SKIN_IDS = ["jianlai", "cangyuantu", "zhanshen", "buliangren", "tunshixingkong"];
+const SKIN_IDS = ["jianlai", "cangyuantu", "zhanshen", "buliangren", "tunshixingkong", "xingkong"];
 
 // ── color helpers ───────────────────────────────────────────────────────────
 
@@ -154,16 +154,17 @@ function buildRamps(a) {
   const G = { base, panel, panel2, panel3, raised, line, ink, ink2, accent, accent2, gold, success, CANVAS };
 
   // ── alias layer — surfaces consumed by the UI; glass alpha baked in ──
-  // Alphas are tuned so the wallpaper stays clearly visible through panels
-  // (bg-base ~0.75 keeps text readable while letting the ink-wash through).
+  // v2: alphas dropped one more notch so the redesigned (high-contrast)
+  // wallpapers read clearly through the panels; the floating panel's
+  // opacity slider overrides these at runtime.
   const aliases = {
-    "bg-base": rgba(base, 0.76),
-    "bg-layer-1": rgba(panel, 0.6),
-    "bg-layer-2": rgba(panel2, 0.5),
-    "bg-layer-3": rgba(panel3, 0.45),
-    "bg-module-platform": rgba(panel3, 0.5),
-    "bg-overlay": rgba(raised, 0.55),
-    "bg-multi-select": rgba(raised, 0.55),
+    "bg-base": rgba(base, 0.66),
+    "bg-layer-1": rgba(panel, 0.52),
+    "bg-layer-2": rgba(panel2, 0.44),
+    "bg-layer-3": rgba(panel3, 0.4),
+    "bg-module-platform": rgba(panel3, 0.42),
+    "bg-overlay": rgba(raised, 0.45),
+    "bg-multi-select": rgba(raised, 0.45),
     "bg-skeleton": rgba(ink, 0.05),
     "bg-mask-1": "rgba(0, 0, 0, 0.45)",
     "bg-mask-2": "rgba(0, 0, 0, 0.55)",
@@ -182,12 +183,12 @@ function buildRamps(a) {
     "brand-primary-new-colorprimary-new-color": accent,
     "brand-text": accent2,
     "button-contrast-fill": base,
-    "button-elevated-fill": rgba(panel2, 0.75),
-    "button-floating-fill": rgba(raised, 0.75),
+    "button-elevated-fill": rgba(panel2, 0.7),
+    "button-floating-fill": rgba(raised, 0.7),
     "button-floating-hover": rgba(line, 0.55),
     "button-ghost-active-border": line,
-    "button-ghost-active-fill": rgba(panel2, 0.65),
-    "button-ghost-active-hover": rgba(raised, 0.65),
+    "button-ghost-active-fill": rgba(panel2, 0.6),
+    "button-ghost-active-hover": rgba(raised, 0.6),
     "button-info-fill": accent,
     "button-info-hover": mix(accent, base, 0.4),
     "button-primary-dimmed": mix(accent, base, 0.2),
@@ -200,7 +201,7 @@ function buildRamps(a) {
     "interactive-bg-hover": rgba(ink, 0.08),
     "interactive-bg-hover-accent": rgba(accent, 0.16),
     "interactive-bg-hover-danger": rgba(red, 0.14),
-    "interactive-bg-hover-solid": rgba(raised, 0.8),
+    "interactive-bg-hover-solid": rgba(raised, 0.75),
     "label-caption": CANVAS.caption,
     "label-dimmed": canvas["500"],
     "label-primary": CANVAS.primary,
@@ -210,12 +211,12 @@ function buildRamps(a) {
     "label-primary-inverted": CANVAS.tooltip,
     "label-secondary": CANVAS.secondary,
     "label-tertiary": CANVAS.tertiary,
-    "markdown-citation": rgba(raised, 0.6),
-    "markdown-code-block": rgba(panel2, 0.55),
-    "markdown-code-block-banner": rgba(panel, 0.55),
-    "markdown-code-segment-selected": rgba(raised, 0.6),
-    "markdown-code-segment-unselected": rgba(panel2, 0.55),
-    "markdown-inline-code": rgba(raised, 0.6),
+    "markdown-citation": rgba(raised, 0.55),
+    "markdown-code-block": rgba(panel2, 0.5),
+    "markdown-code-block-banner": rgba(panel, 0.5),
+    "markdown-code-segment-selected": rgba(raised, 0.55),
+    "markdown-code-segment-unselected": rgba(panel2, 0.5),
+    "markdown-inline-code": rgba(raised, 0.55),
     "markdown-placeholder": canvas["500"],
     "markdown-tag": accent,
     "scrollbar-bg-l1": rgba(line, 0.25),
@@ -233,28 +234,28 @@ function buildRamps(a) {
     "state-warn-primary": amber,
     "state-warn-secondary": rgba(amber, 0.16),
     "state-warn-tertiary": rgba(amber, 0.1),
-    "toast-bg": rgba(panel2, 0.75),
-    "tooltip-bg": rgba(raised, 0.8)
+    "toast-bg": rgba(panel2, 0.7),
+    "tooltip-bg": rgba(raised, 0.75)
   };
 
   /** Component-specific surfaces (sidebar, bubbles, composer…). */
   const specifics = {
-    "sidebar-fill": rgba(base, 0.72),
-    "sidebar-nav-item-active": rgba(raised, 0.65),
+    "sidebar-fill": rgba(base, 0.62),
+    "sidebar-nav-item-active": rgba(raised, 0.6),
     "sidebar-nav-item-active-accent": rgba(accent, 0.25),
-    "sidebar-nav-item-hover": rgba(panel2, 0.55),
-    "bubble": rgba(panel2, 0.6),
-    "bubble-highlight": rgba(raised, 0.6),
-    "input-major": rgba(base, 0.72),
-    "login-input": rgba(base, 0.72),
-    "menu": rgba(panel2, 0.65),
-    "selector": rgba(raised, 0.6),
-    "tip": rgba(panel2, 0.6)
+    "sidebar-nav-item-hover": rgba(panel2, 0.5),
+    "bubble": rgba(panel2, 0.5),
+    "bubble-highlight": rgba(raised, 0.55),
+    "input-major": rgba(base, 0.62),
+    "login-input": rgba(base, 0.62),
+    "menu": rgba(panel2, 0.55),
+    "selector": rgba(raised, 0.55),
+    "tip": rgba(panel2, 0.55)
   };
 
   /** Code highlighting — official semantics on our anchors. */
   const shiki = {
-    "background": rgba(panel2, 0.55),
+    "background": rgba(panel2, 0.5),
     "foreground": ink,
     "token-comment": rgba(ink2, 0.85),
     "token-constant": gold,
@@ -316,27 +317,69 @@ function ridgePath(rand, peakY, troughY, fill, opacity) {
   return `<path d="${d}" fill="${fill}" opacity="${opacity}"/>`;
 }
 
-function buildWallpaper(palette) {
-  const rand = mulberry32(palette.seed);
-  const { base, panel, accent, accent2 } = palette.anchor;
-  const panel2 = mix(panel, base, 0.45);
-  const panel3 = mix(panel, base, 0.62);
+/** One smooth mountain layer: quadratic-midpoint ridge from left to right. */
+function ridgeLayer(rand, peakY, troughY, fill, opacity) {
+  const steps = 6;
+  const pts = [];
+  for (let i = 0; i <= steps; i++) {
+    pts.push([(W * i) / steps, peakY + (troughY - peakY) * rand()]);
+  }
+  let d = `M 0 ${H} L 0 ${pts[0][1].toFixed(1)}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [x0, y0] = pts[i];
+    const [x1, y1] = pts[i + 1];
+    const mx = (x0 + x1) / 2;
+    const my = (y0 + y1) / 2;
+    d += ` Q ${x0.toFixed(1)} ${y0.toFixed(1)} ${mx.toFixed(1)} ${my.toFixed(1)}`;
+  }
+  const last = pts[pts.length - 1];
+  d += ` L ${W} ${H} Z`;
+  return `<path d="${d}" fill="${fill}" opacity="${opacity}"/>`;
+}
 
+/** 印章 seal stamp: small rounded square + arcs, 落款 feel. */
+function sealStamp(rand, color, side) {
+  const size = 46 + rand() * 20;
+  const margin = 42;
+  const x = side === "left" ? margin : W - margin - size;
+  const y = H * 0.16 + rand() * H * 0.1;
+  const r = size * 0.22;
+  const rx = x + size / 2;
+  const ry = y + size / 2;
+  const arcR = size * 0.24;
+  return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${size.toFixed(1)}" height="${size.toFixed(1)}" rx="${r.toFixed(1)}" fill="${color}" opacity="0.85"/>` +
+    `<path d="M ${(rx - arcR).toFixed(1)} ${ry.toFixed(1)} A ${arcR.toFixed(1)} ${arcR.toFixed(1)} 0 1 1 ${(rx + arcR).toFixed(1)} ${ry.toFixed(1)} A ${arcR.toFixed(1)} ${arcR.toFixed(1)} 0 0 0 ${(rx - arcR).toFixed(1)} ${ry.toFixed(1)}" fill="${side === "left" ? "#0f0e0b" : "#f4efe0"}" opacity="0.9"/>`;
+}
+
+/** 水墨山水 wallpaper: strong contrast, accent-tinted far ridges, ink-dark near ridge, mist, seal. */
+function inkWallpaper(palette, rand) {
+  const { base, panel, accent, accent2, red, gold } = palette.anchor;
   const defs = [];
-  const mist1 = `url(#gf-mist)`;
   const layers = [];
-  // far / mid / near mountain layers
-  layers.push(ridgePath(rand, H * 0.30, H * 0.42, panel3, 0.55));
-  layers.push(ridgePath(rand, H * 0.42, H * 0.58, panel2, 0.7));
-  layers.push(ridgePath(rand, H * 0.58, H * 0.78, mix(panel, base, 0.3), 0.85));
 
-  // mist bands (2) — accent-tinted horizontal gradients
-  const mistY1 = H * 0.30 + rand() * H * 0.15;
-  const mistY2 = H * 0.55 + rand() * H * 0.2;
-  layers.push(`<rect x="0" y="${mistY1.toFixed(0)}" width="${W}" height="${(H * 0.12).toFixed(0)}" fill="${mist1}" opacity="0.5"/>`);
-  layers.push(`<rect x="0" y="${mistY2.toFixed(0)}" width="${W}" height="${(H * 0.18).toFixed(0)}" fill="${mist1}" opacity="0.4"/>`);
+  // soft radial glow top-right in accent2 (stronger than v1)
+  const glowId = "gf-glow";
+  defs.push(`<radialGradient id="${glowId}" cx="82%" cy="10%" r="65%"><stop offset="0%" stop-color="${accent2}" stop-opacity="0.45"/><stop offset="100%" stop-color="${accent2}" stop-opacity="0"/></radialGradient>`);
+  layers.push(`<rect x="0" y="0" width="${W}" height="${H}" fill="url(#${glowId})"/>`);
 
-  // ink drops (8–14) drifting over the mountains
+  // far ridge: accent-tinted (visible against the dark base)
+  layers.push(ridgeLayer(rand, H * 0.22, H * 0.4, mix(accent, base, 0.35), 0.75));
+  // mid ridge: lighter panel wash
+  layers.push(ridgeLayer(rand, H * 0.38, H * 0.58, mix(panel, base, 0.25), 0.85));
+  // near ridge: ink-black silhouette
+  layers.push(ridgeLayer(rand, H * 0.58, H * 0.8, mix(base, "#000000", 0.3), 0.95));
+
+  // mist bands (2-3) — accent-tinted, crossing the ridges
+  const mistDef = "gf-mist";
+  defs.push(`<linearGradient id="${mistDef}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${accent}" stop-opacity="0.18"/><stop offset="100%" stop-color="${accent}" stop-opacity="0.03"/></linearGradient>`);
+  const mistCount = 2 + Math.floor(rand() * 2);
+  for (let i = 0; i < mistCount; i++) {
+    const y = H * 0.28 + rand() * H * 0.42;
+    const h = H * (0.08 + rand() * 0.08);
+    layers.push(`<rect x="0" y="${y.toFixed(0)}" width="${W}" height="${h.toFixed(0)}" fill="url(#${mistDef})" opacity="${0.4 + rand() * 0.2}"/>`);
+  }
+
+  // ink drops (8-14) drifting over the mountains
   const drops = 8 + Math.floor(rand() * 7);
   for (let i = 0; i < drops; i++) {
     const cx = rand() * W;
@@ -347,13 +390,69 @@ function buildWallpaper(palette) {
     layers.push(`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r.toFixed(1)}" fill="url(#${id})"/>`);
   }
 
-  // soft radial glow top-right in accent2
-  const glowId = "gf-glow";
-  defs.push(`<radialGradient id="${glowId}" cx="85%" cy="12%" r="60%"><stop offset="0%" stop-color="${accent2}" stop-opacity="0.28"/><stop offset="100%" stop-color="${accent2}" stop-opacity="0"/></radialGradient>`);
-  layers.unshift(`<rect x="0" y="0" width="${W}" height="${H}" fill="url(#${glowId})"/>`);
+  // seal stamp (朱砂 for skins with a red identity, 鎏金 otherwise)
+  const sealColor = red && red !== accent ? red : gold;
+  layers.push(sealStamp(rand, sealColor, rand() > 0.5 ? "left" : "right"));
 
-  // mist gradient
-  defs.push(`<linearGradient id="gf-mist" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${accent}" stop-opacity="0.10"/><stop offset="100%" stop-color="${accent}" stop-opacity="0.02"/></linearGradient>`);
+  return { defs, layers };
+}
+
+/** 星野 wallpaper: nebula + stars + meteor trails + crescent moon. */
+function starWallpaper(palette, rand) {
+  const { base, accent, accent2, gold } = palette.anchor;
+  const defs = [];
+  const layers = [];
+
+  // nebula ×2 (purple + cyan radial washes)
+  const neb1 = "gf-neb1", neb2 = "gf-neb2";
+  defs.push(`<radialGradient id="${neb1}" cx="22%" cy="30%" r="55%"><stop offset="0%" stop-color="${accent}" stop-opacity="0.22"/><stop offset="100%" stop-color="${accent}" stop-opacity="0"/></radialGradient>`);
+  defs.push(`<radialGradient id="${neb2}" cx="80%" cy="70%" r="60%"><stop offset="0%" stop-color="${accent2}" stop-opacity="0.18"/><stop offset="100%" stop-color="${accent2}" stop-opacity="0"/></radialGradient>`);
+  layers.push(`<rect x="0" y="0" width="${W}" height="${H}" fill="url(#${neb1})"/>`);
+  layers.push(`<rect x="0" y="0" width="${W}" height="${H}" fill="url(#${neb2})"/>`);
+
+  // crescent moon (gold)
+  const mx = W * (0.74 + rand() * 0.1);
+  const my = H * (0.12 + rand() * 0.08);
+  const mr = 52 + rand() * 18;
+  layers.push(`<circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="${mr.toFixed(1)}" fill="${gold}" opacity="0.9"/>`);
+  layers.push(`<circle cx="${(mx - mr * 0.32).toFixed(1)}" cy="${(my - mr * 0.18).toFixed(1)}" r="${(mr * 0.88).toFixed(1)}" fill="${base}"/>`);
+
+  // stars: 70-110, varied size/opacity, ~10% with soft glow
+  const stars = 70 + Math.floor(rand() * 41);
+  for (let i = 0; i < stars; i++) {
+    const sx = rand() * W;
+    const sy = rand() * H * 0.9;
+    const sr = 0.8 + rand() * 2;
+    const alpha = 0.3 + rand() * 0.6;
+    if (rand() < 0.1) {
+      layers.push(`<circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="${(sr * 3.2).toFixed(1)}" fill="${accent2}" opacity="${(alpha * 0.12).toFixed(2)}"/>`);
+    }
+    layers.push(`<circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="${sr.toFixed(1)}" fill="${rand() > 0.75 ? gold : "#dfe7ff"}" opacity="${alpha.toFixed(2)}"/>`);
+  }
+
+  // meteor trails (2-3): gradient line + bright head
+  const meteors = 2 + Math.floor(rand() * 2);
+  for (let i = 0; i < meteors; i++) {
+    const x0 = rand() * W * 0.8;
+    const y0 = rand() * H * 0.3;
+    const len = 120 + rand() * 160;
+    const angle = (0.5 + rand() * 0.3) * Math.PI / 4;
+    const x1 = x0 + Math.cos(angle) * len;
+    const y1 = y0 + Math.sin(angle) * len;
+    const id = `gf-meteor-${i}`;
+    defs.push(`<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${accent2}" stop-opacity="0.9"/><stop offset="100%" stop-color="${accent2}" stop-opacity="0"/></linearGradient>`);
+    layers.push(`<line x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}" stroke="url(#${id})" stroke-width="2" stroke-linecap="round"/>`);
+    layers.push(`<circle cx="${x0.toFixed(1)}" cy="${y0.toFixed(1)}" r="2.4" fill="${accent2}" opacity="0.95"/>`);
+  }
+
+  return { defs, layers };
+}
+
+function buildWallpaper(palette) {
+  const rand = mulberry32(palette.seed);
+  const { base } = palette.anchor;
+  const star = palette.id === "xingkong";
+  const { defs, layers } = star ? starWallpaper(palette, rand) : inkWallpaper(palette, rand);
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice">` +
     `<defs>${defs.join("")}</defs>` +
@@ -368,7 +467,12 @@ function buildWallpaper(palette) {
 const palettes = SKIN_IDS.map((id) => JSON.parse(readFileSync(join(ROOT, "palette", `${id}.json`), "utf8")));
 const themes = palettes.map(buildTheme);
 const wallpapers = Object.fromEntries(palettes.map((p) => [p.id, buildWallpaper(p)]));
-const inkMap = Object.fromEntries(themes.map((t) => [t.full.id, t.full.ink]));
+// FX per skin: {type, color, glow} — the canvas effect engine picks ink drops
+// for the guofeng skins and starfield/meteors for the anime sky skin.
+const fxMap = Object.fromEntries(themes.map((t) => [t.full.id, {
+  type: t.full.id === "xingkong" ? "star" : "ink",
+  ...t.full.ink
+}]));
 
 mkdirSync(join(ROOT, "themes"), { recursive: true });
 for (const theme of themes) {
@@ -381,7 +485,7 @@ for (const marker of ["__SKINS__", "__WALLPAPERS__", "__INK__"]) {
 }
 const skinsJson = themes.map((theme) => JSON.stringify(theme.registered, null, 2)).join(",\n").split("\n").map((line) => `\t\t${line}`).join("\n");
 const wallpapersJson = Object.entries(wallpapers).map(([id, url]) => `\t\t${id}: ${JSON.stringify(url)},`).join("\n");
-const inkJson = Object.entries(inkMap).map(([id, ink]) => `\t\t${id}: { color: ${JSON.stringify(ink.color)}, glow: ${JSON.stringify(ink.glow)} },`).join("\n");
+const inkJson = Object.entries(fxMap).map(([id, fx]) => `\t\t${id}: { type: ${JSON.stringify(fx.type)}, color: ${JSON.stringify(fx.color)}, glow: ${JSON.stringify(fx.glow)} },`).join("\n");
 const generated = template
   .replace("__SKINS__", skinsJson)
   .replace("__WALLPAPERS__", wallpapersJson)

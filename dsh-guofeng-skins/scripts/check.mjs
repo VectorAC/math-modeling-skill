@@ -16,7 +16,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const SKIN_IDS = ["jianlai", "cangyuantu", "zhanshen", "buliangren", "tunshixingkong"];
+const SKIN_IDS = ["jianlai", "cangyuantu", "zhanshen", "buliangren", "tunshixingkong", "xingkong"];
 
 // ── token inventory snapshot (dsh-client-ui-theme rc.7) ────────────────────
 
@@ -94,7 +94,7 @@ const fail = (msg) => {
 for (const id of SKIN_IDS) {
   if (!bundle.includes(`"id": "${id}"`)) fail(`skin ${id} missing from lib/client.js`);
 }
-const ids = [...bundle.matchAll(/"id": "(jianlai|cangyuantu|zhanshen|buliangren|tunshixingkong)"/g)].map((m) => m[1]);
+const ids = [...bundle.matchAll(/"id": "(jianlai|cangyuantu|zhanshen|buliangren|tunshixingkong|xingkong)"/g)].map((m) => m[1]);
 if (new Set(ids).size !== ids.length) fail("duplicate skin ids in lib/client.js");
 
 // token names + color values
@@ -108,7 +108,7 @@ for (const token of Object.entries(theme.tokens)) {
 for (const id of SKIN_IDS) {
   if (!bundle.includes(`WALLPAPERS`)) { fail("WALLPAPERS map missing"); break; }
   if (!new RegExp(`\\n\\t\\t${id}: "data:image/svg`).test(bundle)) fail(`wallpaper for ${id} missing`);
-  if (!new RegExp(`\\n\\t\\t${id}: \\{ color:`).test(bundle)) fail(`INK entry for ${id} missing`);
+  if (!new RegExp(`\\n\\t\\t${id}: \\{ type:`).test(bundle)) fail(`INK entry for ${id} missing`);
 }
 
 if (errors === 0) {

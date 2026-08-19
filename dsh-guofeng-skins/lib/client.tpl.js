@@ -49,7 +49,7 @@ __SKINS__
 __WALLPAPERS__
 		};
 
-		/** Particle ink colors per skin. */
+		/** FX config per skin: {type: "ink"|"star", color, glow}. */
 		const INK = {
 __INK__
 		};
@@ -62,7 +62,8 @@ __INK__
 			"skin.cangyuantu": "沧元图",
 			"skin.zhanshen": "斩神",
 			"skin.buliangren": "不良人",
-			"skin.tunshixingkong": "吞噬星空"
+			"skin.tunshixingkong": "吞噬星空",
+			"skin.xingkong": "二次元星空"
 		};
 
 		/** English dictionary, checked complete against the zh key set. */
@@ -73,7 +74,8 @@ __INK__
 			"skin.cangyuantu": "Cangyuan Tu",
 			"skin.zhanshen": "Zhan Shen",
 			"skin.buliangren": "Bu Liang Ren",
-			"skin.tunshixingkong": "Tunshi Xingkong"
+			"skin.tunshixingkong": "Tunshi Xingkong",
+			"skin.xingkong": "Xingkong"
 		};
 
 		/** A guofeng skin id → name lookup. */
@@ -143,7 +145,7 @@ __INK__
 			writeStorage(STORAGE_KEY, id === DEFAULT_SKIN ? null : id);
 		}
 
-		/** Wallpaper config: {src, mask, particles}. */
+		/** Wallpaper config: {src, mask, particles, panel}. */
 		function readWallpaperConfig() {
 			try {
 				const raw = readStorage(WALLPAPER_KEY);
@@ -152,7 +154,8 @@ __INK__
 				return {
 					src: typeof parsed.src === "string" ? parsed.src : null,
 					mask: typeof parsed.mask === "number" ? Math.max(0, Math.min(0.75, parsed.mask)) : 0,
-					particles: typeof parsed.particles === "boolean" ? parsed.particles : true
+					particles: typeof parsed.particles === "boolean" ? parsed.particles : true,
+					panel: typeof parsed.panel === "number" ? Math.max(0.15, Math.min(1, parsed.panel)) : 1
 				};
 			} catch {
 				return null;
@@ -441,6 +444,39 @@ html.dsh-gf-on #root { position: relative; z-index: 1; }
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
   width: 100%; height: 100%; object-fit: cover; object-position: center;
   opacity: 1; display: none; transition: opacity 0.3s ease;
+  /* Ken Burns: a static image slowly pans/zooms like a live wallpaper */
+  animation: dsh-gf-kenburns 40s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes dsh-gf-kenburns {
+  0% { transform: scale(1) translate(0, 0); transform-origin: 50% 50%; }
+  100% { transform: scale(1.05) translate(1%, 1.5%); transform-origin: 70% 30%; }
+}
+/* ===== panel opacity override (user slider) =====
+   !important stylesheet rule beats the ThemePresenter's body inline tokens
+   (which are re-applied without !important) — and it is not wiped by its
+   removeProperty pass. Reference colors are the static ramps, not aliases
+   (aliases are already rgba from the skins). Only background surfaces are
+   overridden; text/border/button tokens stay for readability. */
+html.dsh-gf-glass body {
+  --dsw-alias-bg-base: color-mix(in srgb, var(--dsw-static-neutral-bluish-950) calc(var(--dsh-gf-panel-opacity, 1) * 100%), transparent) !important;
+  --dsw-alias-bg-layer-1: color-mix(in srgb, var(--dsw-static-neutral-bluish-875) calc(var(--dsh-gf-panel-opacity, 1) * 100%), transparent) !important;
+  --dsw-alias-bg-layer-2: color-mix(in srgb, var(--dsw-static-neutral-bluish-850) calc(var(--dsh-gf-panel-opacity, 1) * 100%), transparent) !important;
+  --dsw-alias-bg-layer-3: color-mix(in srgb, var(--dsw-static-neutral-bluish-800) calc(var(--dsh-gf-panel-opacity, 1) * 100%), transparent) !important;
+  --dsw-alias-bg-module-platform: color-mix(in srgb, var(--dsw-static-neutral-bluish-800) calc(var(--dsh-gf-panel-opacity, 1) * 100%), transparent) !important;
+  --dsw-alias-bg-multi-select: color-mix(in srgb, var(--dsw-static-neutral-bluish-750) calc(var(--dsh-gf-panel-opacity, 1) * 100%), transparent) !important;
+  --dsw-alias-bg-overlay: color-mix(in srgb, var(--dsw-static-neutral-bluish-750) calc(var(--dsh-gf-panel-opacity, 1) * 100%), transparent) !important;
+  --dsw-specific-sidebar-fill: color-mix(in srgb, var(--dsw-static-neutral-bluish-900) calc(var(--dsh-gf-panel-opacity, 1) * 100%), transparent) !important;
+  --dsw-specific-input-major: color-mix(in srgb, var(--dsw-static-neutral-bluish-850) calc(var(--dsh-gf-panel-opacity, 1) * 100%), transparent) !important;
+  --dsw-specific-login-input: color-mix(in srgb, var(--dsw-static-neutral-bluish-900) calc(var(--dsh-gf-panel-opacity, 1) * 100%), transparent) !important;
+  --dsw-specific-selector: color-mix(in srgb, var(--dsw-static-neutral-bluish-800) calc(var(--dsh-gf-panel-opacity, 1) * 100%), transparent) !important;
+  --dsw-specific-tip: color-mix(in srgb, var(--dsw-static-neutral-bluish-800) calc(var(--dsh-gf-panel-opacity, 1) * 100%), transparent) !important;
+  --dsw-specific-bubble: color-mix(in srgb, var(--dsw-static-neutral-bluish-850) calc(var(--dsh-gf-panel-opacity, 1) * 100%), transparent) !important;
+  --dsw-specific-bubble-highlight: color-mix(in srgb, var(--dsw-static-neutral-bluish-750) calc(var(--dsh-gf-panel-opacity, 1) * 100%), transparent) !important;
+  --dsw-alias-markdown-code-block: color-mix(in srgb, var(--dsw-static-neutral-bluish-850) calc(var(--dsh-gf-panel-opacity, 1) * 100%), transparent) !important;
+  --dsw-alias-markdown-citation: color-mix(in srgb, var(--dsw-static-neutral-bluish-800) calc(var(--dsh-gf-panel-opacity, 1) * 100%), transparent) !important;
+  --dsw-alias-markdown-inline-code: color-mix(in srgb, var(--dsw-static-neutral-bluish-800) calc(var(--dsh-gf-panel-opacity, 1) * 100%), transparent) !important;
+  --dsw-specific-menu: color-mix(in srgb, var(--dsw-static-neutral-bluish-850) calc(var(--dsh-gf-panel-opacity, 1) * 100%), transparent) !important;
 }
 #dsh-gf-mask {
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
@@ -558,6 +594,7 @@ html.dsh-gf-on #dsh-gf-ink { display: block; }
 #dsh-gf-panel .dsh-status.dsh-err { background: rgba(215, 0, 21, 0.12); color: #ff453a; }
 @media (prefers-reduced-motion: reduce) {
   #dsh-gf-toggle, #dsh-gf-panel button, .dsh-gf-send { transition: none; }
+  #dsh-gf-wallpaper { animation: none; }
 }
 `;
 		//#endregion
@@ -642,6 +679,10 @@ html.dsh-gf-on #dsh-gf-ink { display: block; }
 		function applyWallpaper(skinId, cfg) {
 			const html = document.documentElement;
 			html.classList.toggle("dsh-gf-on", Boolean(skinId));
+			// panel-opacity override (user slider): 1 = baked alphas, <1 = glass
+			const panel = (cfg && typeof cfg.panel === "number") ? cfg.panel : 1;
+			html.style.setProperty("--dsh-gf-panel-opacity", String(panel));
+			html.classList.toggle("dsh-gf-glass", Boolean(skinId) && panel < 1);
 			if (bgEl === null) return;
 			if (!skinId) {
 				// built-in appearance: hide the wallpaper and pause particles
@@ -703,30 +744,81 @@ html.dsh-gf-on #dsh-gf-ink { display: block; }
 		}
 		//#endregion
 
-		//#region ink particle engine
-		let particlesRaf = 0;
-		let particlesRunning = false;
-		const DROPS = 22;
+		//#region FX engine (ink drops / starfield, per skin)
+		/**
+		 * Canvas effect engine, one type per skin (INK map from gen.mjs):
+		 *   "ink"  — 30 ink drops (big ones radial-gradient with glow core)
+		 *            + 12 light dust motes, slow upward drift + sine wobble
+		 *   "star" — 80 twinkling stars (sinusoidal breathing, phase-shifted)
+		 *            + occasional meteor streaks + the same light dust
+		 * Amplitudes stay small; reduced-motion renders one static frame.
+		 */
+		let fxRaf = 0;
+		let fxRunning = false;
+		let fxMeteors = [];
+		let fxNextMeteorAt = 0;
 
-		function makeDrops() {
+		/** FX config of the active skin (falls back to ink). */
+		function fxConfig() {
+			const skin = activeSkin();
+			return (skin && INK[skin]) || { type: "ink", color: "#5f8d6e", glow: "#4a7f9e" };
+		}
+
+		function makeDrops(type) {
+			const count = type === "star" ? 12 : 30;
 			const drops = [];
-			for (let i = 0; i < DROPS; i++) {
+			for (let i = 0; i < count; i++) {
 				drops.push({
-					x: Math.random() * 1,
-					y: Math.random() * 1,
-					r: 2 + Math.random() * 7,
-					vy: 0.00015 + Math.random() * 0.0003,
+					x: Math.random(),
+					y: Math.random(),
+					r: type === "star" ? 1.5 + Math.random() * 3 : 6 + Math.random() * 14,
+					vy: 0.00005 + Math.random() * 0.00015,
 					phase: Math.random() * Math.PI * 2,
-					amp: 0.01 + Math.random() * 0.02,
-					alpha: 0.05 + Math.random() * 0.09
+					amp: 0.008 + Math.random() * 0.018,
+					alpha: 0.18 + Math.random() * 0.14
 				});
 			}
 			return drops;
 		}
 
-		const drops = makeDrops();
+		const inkDrops = makeDrops("ink");
+		const dust = makeDrops("star");
 
-		function paintFrame(t) {
+		const stars = [];
+		for (let i = 0; i < 80; i++) {
+			stars.push({
+				x: Math.random(),
+				y: Math.random() * 0.95,
+				r: 0.5 + Math.random() * 2,
+				base: 0.25 + Math.random() * 0.6,
+				phase: Math.random() * Math.PI * 2,
+				freq: 0.0005 + Math.random() * 0.0012
+			});
+		}
+
+		/** Spawn one meteor streak (coordinates in device pixels). */
+		function spawnMeteor() {
+			const dpr = window.devicePixelRatio || 1;
+			const w = canvasEl.width;
+			const h = canvasEl.height;
+			const vx = (4 + Math.random() * 5) * dpr;
+			fxMeteors.push({
+				x: w * 0.05 + Math.random() * w * 0.75,
+				y: Math.random() * h * 0.25,
+				vx,
+				vy: vx * 0.45,
+				life: 0,
+				maxLife: 70 + Math.random() * 50,
+				len: (90 + Math.random() * 110) * dpr
+			});
+			fxNextMeteorAt = nowRef + 4000 + Math.random() * 4000;
+		}
+
+		/** Latest rAF timestamp (set in paintFrame) for meteor scheduling. */
+		let nowRef = 0;
+
+		function paintFrame(now) {
+			nowRef = now;
 			const canvas = canvasEl;
 			const dpr = window.devicePixelRatio || 1;
 			const w = window.innerWidth;
@@ -737,26 +829,89 @@ html.dsh-gf-on #dsh-gf-ink { display: block; }
 			}
 			const ctx = canvas.getContext("2d");
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
-			const color = inkColor();
-			for (const drop of drops) {
-				drop.y -= drop.vy * 60;
-				if (drop.y < -0.05) drop.y = 1.05;
-				const x = (drop.x + Math.sin(t * 0.0003 + drop.phase) * drop.amp) * w * dpr;
-				const y = drop.y * h * dpr;
+			const fx = fxConfig();
+
+			if (fx.type === "star") {
+				// twinkling stars: sinusoidal breathing, phase-shifted
+				for (const s of stars) {
+					const a = s.base * (0.55 + 0.45 * Math.sin(now * s.freq + s.phase));
+					if (a < 0.02) continue;
+					ctx.beginPath();
+					ctx.arc(s.x * canvas.width, s.y * canvas.height, s.r * dpr, 0, Math.PI * 2);
+					ctx.fillStyle = "#dfe7ff";
+					ctx.globalAlpha = a;
+					ctx.fill();
+				}
+				// meteors
+				if (now > fxNextMeteorAt && fxMeteors.length < 3) spawnMeteor();
+				for (let i = fxMeteors.length - 1; i >= 0; i--) {
+					const m = fxMeteors[i];
+					m.x += m.vx;
+					m.y += m.vy;
+					m.life++;
+					if (m.life > m.maxLife || m.x > canvas.width + m.len || m.y > canvas.height) {
+						fxMeteors.splice(i, 1);
+						continue;
+					}
+					const speed = Math.hypot(m.vx, m.vy) || 1;
+					const ux = m.vx / speed;
+					const uy = m.vy / speed;
+					const tx = m.x - ux * m.len;
+					const ty = m.y - uy * m.len;
+					const grad = ctx.createLinearGradient(m.x, m.y, tx, ty);
+					grad.addColorStop(0, fx.glow);
+					grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+					ctx.strokeStyle = grad;
+					ctx.lineWidth = 2 * dpr;
+					ctx.lineCap = "round";
+					ctx.globalAlpha = 0.9;
+					ctx.beginPath();
+					ctx.moveTo(m.x, m.y);
+					ctx.lineTo(tx, ty);
+					ctx.stroke();
+					ctx.beginPath();
+					ctx.arc(m.x, m.y, 2.2 * dpr, 0, Math.PI * 2);
+					ctx.fillStyle = fx.glow;
+					ctx.globalAlpha = 0.95;
+					ctx.fill();
+				}
+			} else {
+				// ink drops: big ones glow-cored radial gradients, small solid
+				for (const drop of inkDrops) {
+					drop.y -= drop.vy * 60;
+					if (drop.y < -0.05) drop.y = 1.05;
+					const x = (drop.x + Math.sin(now * 0.0003 + drop.phase) * drop.amp) * canvas.width;
+					const y = drop.y * canvas.height;
+					if (drop.r > 12) {
+						const g = ctx.createRadialGradient(x, y, 0, x, y, drop.r * dpr);
+						g.addColorStop(0, fx.glow);
+						g.addColorStop(1, fx.color);
+						ctx.fillStyle = g;
+						ctx.globalAlpha = drop.alpha * 0.8;
+					} else {
+						ctx.fillStyle = fx.color;
+						ctx.globalAlpha = drop.alpha;
+					}
+					ctx.beginPath();
+					ctx.arc(x, y, drop.r * dpr, 0, Math.PI * 2);
+					ctx.fill();
+				}
+			}
+
+			// light dust (both types): small glow-colored motes
+			for (const d of dust) {
+				d.y -= d.vy * 60;
+				if (d.y < -0.05) d.y = 1.05;
+				const x = (d.x + Math.sin(now * 0.0003 + d.phase) * d.amp) * canvas.width;
+				const y = d.y * canvas.height;
 				ctx.beginPath();
-				ctx.arc(x, y, drop.r * dpr, 0, Math.PI * 2);
-				ctx.fillStyle = color;
-				ctx.globalAlpha = drop.alpha;
+				ctx.arc(x, y, d.r * dpr, 0, Math.PI * 2);
+				ctx.fillStyle = fx.glow;
+				ctx.globalAlpha = d.alpha * 0.5;
 				ctx.fill();
 			}
 			ctx.globalAlpha = 1;
-			particlesRaf = requestAnimationFrame(paintFrame);
-		}
-
-		/** Current ink color from the active skin (falls back gracefully). */
-		function inkColor() {
-			const skin = activeSkin();
-			return (skin && INK[skin]) ? INK[skin].color : "#5f8d6e";
+			fxRaf = requestAnimationFrame(paintFrame);
 		}
 
 		function applyParticles(enabled) {
@@ -769,19 +924,21 @@ html.dsh-gf-on #dsh-gf-ink { display: block; }
 		}
 
 		function startParticles() {
-			if (particlesRunning || !canvasEl) return;
+			if (fxRunning || !canvasEl) return;
 			if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
 				paintFrame(0); // one static frame
+				cancelAnimationFrame(fxRaf); // stop the loop after the static frame
 				return;
 			}
-			particlesRunning = true;
-			particlesRaf = requestAnimationFrame(paintFrame);
+			fxRunning = true;
+			fxRaf = requestAnimationFrame(paintFrame);
 		}
 
 		function stopParticles() {
-			if (!particlesRunning) return;
-			cancelAnimationFrame(particlesRaf);
-			particlesRunning = false;
+			if (!fxRunning && fxMeteors.length === 0) return;
+			cancelAnimationFrame(fxRaf);
+			fxRunning = false;
+			fxMeteors = [];
 			if (canvasEl) {
 				const ctx = canvasEl.getContext("2d");
 				ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
@@ -934,6 +1091,23 @@ html.dsh-gf-on #dsh-gf-ink { display: block; }
 				thumb
 			]));
 
+			// panel opacity slider (glass transparency)
+			const panelValueEl = el("b", { text: "" });
+			const panelSlider = el("input", { type: "range", min: "15", max: "100", step: "1" });
+			const renderPanel = () => {
+				panelSlider.value = String(Math.round(cfg.panel * 100));
+				panelValueEl.textContent = `${Math.round(cfg.panel * 100)}%`;
+			};
+			panelSlider.addEventListener("input", () => {
+				cfg.panel = Number(panelSlider.value) / 100;
+				panelValueEl.textContent = `${panelSlider.value}%`;
+				onChange(cfg);
+			});
+			panel.append(el("div", { class: "dsh-row" }, [
+				el("label", { class: "dsh-label" }, [el("span", { text: "面板透明度" }), panelValueEl]),
+				panelSlider
+			]));
+
 			// mask slider
 			const maskValueEl = el("b", { text: "" });
 			const maskSlider = el("input", { type: "range", min: "0", max: "75", step: "1" });
@@ -991,6 +1165,7 @@ html.dsh-gf-on #dsh-gf-ink { display: block; }
 			};
 			panel._syncThumb = syncThumb;
 			panel._renderMask = renderMask;
+			panel._renderPanel = renderPanel;
 			panel._renderParticle = renderParticleLabel;
 			return panel;
 		}
@@ -1018,6 +1193,7 @@ html.dsh-gf-on #dsh-gf-ink { display: block; }
 				refreshWallpaper(next);
 				panel._syncThumb();
 				panel._renderMask();
+				panel._renderPanel();
 				panel._renderParticle();
 				return saved;
 			});
@@ -1026,6 +1202,7 @@ html.dsh-gf-on #dsh-gf-ink { display: block; }
 			document.body.append(panel);
 			panel._syncThumb();
 			panel._renderMask();
+			panel._renderPanel();
 			panel._renderParticle();
 		}
 
