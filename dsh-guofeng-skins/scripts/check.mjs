@@ -104,10 +104,11 @@ for (const token of Object.entries(theme.tokens)) {
   if (!validColor(value)) fail(`bad color value for ${name}: ${value}`);
 }
 
-// WALLPAPERS / INK keys match the skins
+// scene renderer + INK keys match the skins
+if (!bundle.includes("buildStarScene") || !bundle.includes("buildInkScene")) {
+  fail("scene renderer (buildStarScene/buildInkScene) missing from lib/client.js");
+}
 for (const id of SKIN_IDS) {
-  if (!bundle.includes(`WALLPAPERS`)) { fail("WALLPAPERS map missing"); break; }
-  if (!new RegExp(`\\n\\t\\t${id}: "data:image/svg`).test(bundle)) fail(`wallpaper for ${id} missing`);
   if (!new RegExp(`\\n\\t\\t${id}: \\{ type:`).test(bundle)) fail(`INK entry for ${id} missing`);
 }
 

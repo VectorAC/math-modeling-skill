@@ -44,12 +44,12 @@ window.__ModuleLoader__.load({
 __SKINS__
 		];
 
-		/** Built-in ink-wash wallpaper per skin (data URLs, generated). */
-		const WALLPAPERS = {
-__WALLPAPERS__
-		};
-
-		/** FX config per skin: {type: "ink"|"star", color, glow}. */
+		/**
+		 * FX config per skin: {type: "ink"|"star", color, glow}. The
+		 * built-in wallpaper is NOT an image — it is a live canvas scene
+		 * rendered by the scene renderer below (starfield / ink-wash), so
+		 * it breathes and drifts. The <img> layer is only for user uploads.
+		 */
 		const INK = {
 __INK__
 		};
@@ -80,6 +80,28 @@ __INK__
 
 		/** A guofeng skin id → name lookup. */
 		const SKIN_BY_ID = Object.fromEntries(SKINS.map((s) => [s.id, s]));
+
+		/** "#rrggbb" + alpha → "rgba(r, g, b, a)". */
+		function hexToRgba(hexColor, alpha) {
+			const m = /^#([0-9a-f]{6})$/i.exec(hexColor || "");
+			if (!m) return `rgba(127, 127, 127, ${alpha})`;
+			const v = parseInt(m[1], 16);
+			return `rgba(${(v >> 16) & 255}, ${(v >> 8) & 255}, ${v & 255}, ${alpha})`;
+		}
+
+		/** Linear mix of two "#rrggbb" colors, t=0 → a, t=1 → b. */
+		function mixHex(a, b, t) {
+			const pa = /^#([0-9a-f]{6})$/i.exec(a || "");
+			const pb = /^#([0-9a-f]{6})$/i.exec(b || "");
+			if (!pa || !pb) return a || b || "#000000";
+			const ca = parseInt(pa[1], 16);
+			const cb = parseInt(pb[1], 16);
+			const ch = (v, s) => Math.round(v + (s - v) * t);
+			const r = ch((ca >> 16) & 255, (cb >> 16) & 255);
+			const g = ch((ca >> 8) & 255, (cb >> 8) & 255);
+			const bl = ch(ca & 255, cb & 255);
+			return `#${((r << 16) | (g << 8) | bl).toString(16).padStart(6, "0")}`;
+		}
 		//#endregion
 
 		//#region persistence
@@ -488,6 +510,13 @@ html.dsh-gf-glass body {
 }
 html.dsh-gf-on #dsh-gf-wallpaper { display: block; }
 html.dsh-gf-on #dsh-gf-ink { display: block; }
+/* built-in scene canvas (rendered wallpaper); hidden while a user upload is shown */
+#dsh-gf-scene {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  display: none; width: 100%; height: 100%;
+}
+html.dsh-gf-on #dsh-gf-scene { display: block; }
+html.dsh-gf-upload #dsh-gf-scene { display: none; }
 /* ===== send ripple ===== */
 .dsh-gf-ripple {
   position: absolute; border-radius: 50%; pointer-events: none;
@@ -606,6 +635,7 @@ html.dsh-gf-on #dsh-gf-ink { display: block; }
 
 		let bgEl = null;
 		let maskEl = null;
+		let sceneEl = null;
 		let canvasEl = null;
 		let currentSrc = "";
 		let maskValue = 0;
@@ -685,14 +715,23 @@ html.dsh-gf-on #dsh-gf-ink { display: block; }
 			html.classList.toggle("dsh-gf-glass", Boolean(skinId) && panel < 1);
 			if (bgEl === null) return;
 			if (!skinId) {
-				// built-in appearance: hide the wallpaper and pause particles
-				// (renderBg(null) clears the inline display:block)
+				// built-in appearance: hide everything
 				renderBg(null);
+				stopScene();
 				applyParticles(false);
 				return;
 			}
-			const src = (cfg && cfg.src) || WALLPAPERS[skinId];
-			renderBg(src);
+			const upload = cfg && cfg.src;
+			html.classList.toggle("dsh-gf-upload", Boolean(upload));
+			if (upload) {
+				// user image: static img layer + Ken Burns
+				renderBg(upload);
+				stopScene();
+			} else {
+				// built-in: live canvas scene for this skin
+				renderBg(null);
+				startScene(skinId);
+			}
 			html.style.setProperty("--dsh-gf-mask", String(cfg ? cfg.mask : 0));
 			applyParticles(Boolean(cfg ? cfg.particles : true));
 		}
@@ -717,6 +756,8 @@ html.dsh-gf-on #dsh-gf-ink { display: block; }
 			if (bgEl !== null) return;
 			maskEl = document.createElement("div");
 			maskEl.id = "dsh-gf-mask";
+			sceneEl = document.createElement("canvas");
+			sceneEl.id = "dsh-gf-scene";
 			canvasEl = document.createElement("canvas");
 			canvasEl.id = "dsh-gf-ink";
 			bgEl = document.createElement("img");
@@ -728,8 +769,9 @@ html.dsh-gf-on #dsh-gf-ink { display: block; }
 				bgEl.style.display = "none";
 				if (typeof reportBgError === "function") reportBgError();
 			});
-			// prepend order: mask first, then canvas, then img → img on top of canvas
+			// prepend order: mask, scene, fx canvas, img → img on top when shown
 			document.body.prepend(maskEl);
+			document.body.prepend(sceneEl);
 			document.body.prepend(canvasEl);
 			document.body.prepend(bgEl);
 		}
@@ -744,13 +786,377 @@ html.dsh-gf-on #dsh-gf-ink { display: block; }
 		}
 		//#endregion
 
-		//#region FX engine (ink drops / starfield, per skin)
+		//#region scene renderer (live built-in wallpapers)
 		/**
-		 * Canvas effect engine, one type per skin (INK map from gen.mjs):
-		 *   "ink"  — 30 ink drops (big ones radial-gradient with glow core)
-		 *            + 12 light dust motes, slow upward drift + sine wobble
-		 *   "star" — 80 twinkling stars (sinusoidal breathing, phase-shifted)
-		 *            + occasional meteor streaks + the same light dust
+		 * The built-in wallpaper is a live canvas scene, not an image:
+		 *   "star" — reference-calibrated night sky: dark blue-grey gradient,
+		 *            purple/cyan nebula washes, a noise-milled milky-way
+		 *            band, power-law stars (few bright ones with glow +
+		 *            diffraction spikes), a black silhouette horizon; the
+		 *            band drifts slowly and bright stars twinkle.
+		 *   "ink"  — ink-wash mountains: accent-tinted far ridge (blurred),
+		 *            panel-wash mid ridge, sharp ink-black near ridge,
+		 *            blurred mist bands, soft ink blots and a seal stamp;
+		 *            the layer drifts and ink blots keep dissolving.
+		 * Static layers are pre-rendered to an offscreen canvas once per
+		 * skin/resize; the loop only blits it plus small dynamic elements,
+		 * so per-frame cost stays tiny.
+		 */
+		let sceneRaf = 0;
+		let sceneRunning = false;
+		let sceneLayer = null;
+		let sceneTwinkle = [];
+		let sceneBlots = [];
+		let sceneNextBlotAt = 0;
+		let sceneSkinId = null;
+		let sceneType = "ink";
+		let starSprite = null;
+
+		function getStarSprite() {
+			if (starSprite) return starSprite;
+			const s = document.createElement("canvas");
+			s.width = 32;
+			s.height = 32;
+			const ctx = s.getContext("2d");
+			const g = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+			g.addColorStop(0, "rgba(255, 255, 255, 1)");
+			g.addColorStop(0.3, "rgba(255, 255, 255, 0.55)");
+			g.addColorStop(1, "rgba(255, 255, 255, 0)");
+			ctx.fillStyle = g;
+			ctx.fillRect(0, 0, 32, 32);
+			starSprite = s;
+			return s;
+		}
+
+		/** Live theme colors of the active skin (read from <body> tokens). */
+		function sceneColors() {
+			const cs = getComputedStyle(document.body);
+			const get = (name) => (cs.getPropertyValue(name) || "").trim();
+			return {
+				base: get("--dsw-static-neutral-bluish-950") || "#0d101c",
+				panel: get("--dsw-static-neutral-bluish-875") || "#1a2030",
+				ink: get("--dsw-static-neutral-bluish-50") || "#dfe6ff",
+				accent: get("--dsw-static-deepseek-500") || "#7b6cf6",
+				accent2: get("--dsw-static-blue-500") || "#5ec8ff",
+				gold: get("--dsw-static-amber-400") || "#ffd86b",
+				red: get("--dsw-static-red-400") || "#ff5a7a"
+			};
+		}
+
+		/** Blurred noise band: the milky way (diagonal gaussian × noise). */
+		function drawMilkyWay(ctx, w, h, tone, alpha) {
+			const nw = Math.max(64, w >> 4);
+			const nh = Math.max(36, h >> 4);
+			const noise = document.createElement("canvas");
+			noise.width = nw;
+			noise.height = nh;
+			const nctx = noise.getContext("2d");
+			const img = nctx.createImageData(nw, nh);
+			for (let y = 0; y < nh; y++) {
+				for (let x = 0; x < nw; x++) {
+					const bandY = 0.38 + 0.16 * (x / nw);
+					const d = (y / nh - bandY) * 5;
+					const profile = Math.exp(-d * d);
+					const v = Math.round(255 * profile * (0.3 + Math.random() * 0.7) * alpha);
+					const i = (y * nw + x) * 4;
+					img.data[i] = tone[0];
+					img.data[i + 1] = tone[1];
+					img.data[i + 2] = tone[2];
+					img.data[i + 3] = v;
+				}
+			}
+			nctx.putImageData(img, 0, 0);
+			const blur = document.createElement("canvas");
+			blur.width = w >> 1;
+			blur.height = h >> 1;
+			const bctx = blur.getContext("2d");
+			if (typeof bctx.filter === "string") bctx.filter = "blur(20px)";
+			bctx.drawImage(noise, 0, 0, blur.width, blur.height);
+			ctx.drawImage(blur, 0, 0, w, h);
+		}
+
+		function buildStarScene(ctx, w, h, fx) {
+			// reference-calibrated night gradient (dark top/bottom, brighter mid)
+			const bg = ctx.createLinearGradient(0, 0, 0, h);
+			bg.addColorStop(0, "#0d1019");
+			bg.addColorStop(0.45, "#141c2c");
+			bg.addColorStop(0.72, "#101624");
+			bg.addColorStop(1, "#07090f");
+			ctx.fillStyle = bg;
+			ctx.fillRect(0, 0, w, h);
+
+			// nebula washes
+			const nebula = (cx, cy, r, color, alpha) => {
+				const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+				g.addColorStop(0, hexToRgba(color, alpha));
+				g.addColorStop(1, hexToRgba(color, 0));
+				ctx.fillStyle = g;
+				ctx.fillRect(0, 0, w, h);
+			};
+			nebula(w * 0.22, h * 0.3, w * 0.55, fx.color, 0.16);
+			nebula(w * 0.85, h * 0.65, w * 0.5, fx.glow, 0.13);
+			nebula(w * 0.6, h * 0.15, w * 0.4, fx.glow, 0.08);
+
+			// milky way band (bluish-white)
+			drawMilkyWay(ctx, w, h, [198, 210, 240], 0.5);
+
+			// stars: power-law sizes; few bright with glow + diffraction spikes
+			const sprite = getStarSprite();
+			const count = 420 + Math.floor(Math.random() * 160);
+			for (let i = 0; i < count; i++) {
+				const r = 0.3 + Math.pow(Math.random(), 3) * 2.4;
+				const x = Math.random() * w;
+				const y = Math.random() * h * 0.92;
+				const alpha = 0.2 + Math.pow(Math.random(), 2) * 0.8;
+				const tint = Math.random() > 0.88 ? (Math.random() > 0.5 ? fx.color : "#ffd86b") : "#dfe6ff";
+				if (r > 1.5) {
+					const size = 10 + r * 7;
+					ctx.globalAlpha = alpha * 0.75;
+					ctx.drawImage(sprite, x - size / 2, y - size / 2, size, size);
+					ctx.globalAlpha = alpha;
+					ctx.fillStyle = tint;
+					ctx.fillRect(x - r / 2, y - r / 2, r, r);
+					ctx.globalAlpha = 1;
+					// diffraction spikes: thin crossed gradients
+					const spike = ctx.createLinearGradient(x - 16 * r, y, x + 16 * r, y);
+					spike.addColorStop(0, hexToRgba(tint, 0));
+					spike.addColorStop(0.5, hexToRgba(tint, alpha * 0.6));
+					spike.addColorStop(1, hexToRgba(tint, 0));
+					ctx.strokeStyle = spike;
+					ctx.lineWidth = 0.8;
+					ctx.beginPath();
+					ctx.moveTo(x - 16 * r, y);
+					ctx.lineTo(x + 16 * r, y);
+					ctx.stroke();
+					const spike2 = ctx.createLinearGradient(x, y - 16 * r, x, y + 16 * r);
+					spike2.addColorStop(0, hexToRgba(tint, 0));
+					spike2.addColorStop(0.5, hexToRgba(tint, alpha * 0.6));
+					spike2.addColorStop(1, hexToRgba(tint, 0));
+					ctx.strokeStyle = spike2;
+					ctx.beginPath();
+					ctx.moveTo(x, y - 16 * r);
+					ctx.lineTo(x, y + 16 * r);
+					ctx.stroke();
+					if (Math.random() > 0.35) {
+						sceneTwinkle.push({ x, y, size, base: alpha, phase: Math.random() * Math.PI * 2, freq: 0.0004 + Math.random() * 0.0009 });
+					}
+				} else {
+					ctx.globalAlpha = alpha;
+					ctx.fillStyle = tint;
+					ctx.fillRect(x - r / 2, y - r / 2, r, r);
+				}
+			}
+			ctx.globalAlpha = 1;
+
+			// black silhouette horizon (bottom band)
+			ctx.fillStyle = "#04060a";
+			ctx.beginPath();
+			ctx.moveTo(0, h);
+			ctx.lineTo(0, h * 0.85);
+			const segs = 14;
+			for (let i = 1; i <= segs; i++) {
+				ctx.lineTo((w * i) / segs, h * (0.83 + Math.random() * 0.1));
+			}
+			ctx.lineTo(w, h);
+			ctx.closePath();
+			ctx.fill();
+		}
+
+		function buildInkScene(ctx, w, h) {
+			const c = sceneColors();
+			ctx.fillStyle = c.base;
+			ctx.fillRect(0, 0, w, h);
+			// soft accent2 glow top-right
+			const glow = ctx.createRadialGradient(w * 0.82, h * 0.1, 0, w * 0.82, h * 0.1, w * 0.6);
+			glow.addColorStop(0, hexToRgba(c.accent2, 0.22));
+			glow.addColorStop(1, hexToRgba(c.accent2, 0));
+			ctx.fillStyle = glow;
+			ctx.fillRect(0, 0, w, h);
+
+			// ridge: jagged path with per-point jitter
+			const ridge = (topY, amp, fill, alpha, edge) => {
+				ctx.save();
+				if (edge && typeof ctx.filter === "string") ctx.filter = `blur(${edge}px)`;
+				ctx.globalAlpha = alpha;
+				ctx.fillStyle = fill;
+				ctx.beginPath();
+				ctx.moveTo(0, h);
+				ctx.lineTo(0, topY + (Math.random() - 0.5) * amp * 2);
+				const segs = 12;
+				for (let i = 1; i <= segs; i++) {
+					ctx.lineTo((w * i) / segs, topY + (Math.random() - 0.5) * amp * 2);
+				}
+				ctx.lineTo(w, h);
+				ctx.closePath();
+				ctx.fill();
+				ctx.restore();
+			};
+			// far: accent-tinted blurred; mid: panel wash; near: ink-black sharp
+			ridge(h * 0.22, h * 0.08, mixHex(c.accent, c.base, 0.4), 0.8, 8);
+			ridge(h * 0.4, h * 0.1, mixHex(c.panel, c.base, 0.35), 0.85, 3);
+			ridge(h * 0.62, h * 0.12, "#050608", 0.95, 0);
+
+			// mist bands (blurred accent-tinted rects)
+			const mistCount = 2 + Math.floor(Math.random() * 2);
+			for (let i = 0; i < mistCount; i++) {
+				const y = h * (0.24 + Math.random() * 0.45);
+				const bh = h * (0.07 + Math.random() * 0.07);
+				const mg = ctx.createLinearGradient(0, y, 0, y + bh);
+				mg.addColorStop(0, hexToRgba(c.accent, 0.14));
+				mg.addColorStop(1, hexToRgba(c.accent, 0.02));
+				ctx.save();
+				if (typeof ctx.filter === "string") ctx.filter = "blur(10px)";
+				ctx.fillStyle = mg;
+				ctx.fillRect(0, y, w, bh);
+				ctx.restore();
+			}
+
+			// soft static ink blots
+			const blotCount = 5 + Math.floor(Math.random() * 4);
+			for (let i = 0; i < blotCount; i++) {
+				const bx = Math.random() * w;
+				const by = h * (0.2 + Math.random() * 0.55);
+				const br = 30 + Math.random() * 70;
+				const bg = ctx.createRadialGradient(bx, by, 0, bx, by, br);
+				bg.addColorStop(0, hexToRgba(c.accent, 0.16));
+				bg.addColorStop(1, hexToRgba(c.accent, 0));
+				ctx.fillStyle = bg;
+				ctx.beginPath();
+				ctx.arc(bx, by, br, 0, Math.PI * 2);
+				ctx.fill();
+			}
+
+			// seal stamp (朱砂 for red-identity skins, gold otherwise)
+			const sealColor = c.red && c.red !== c.accent ? c.red : c.gold;
+			const size = 46 + Math.random() * 20;
+			const sx = w - size - 44;
+			const sy = h * 0.14 + Math.random() * h * 0.08;
+			ctx.globalAlpha = 0.85;
+			ctx.fillStyle = sealColor;
+			ctx.beginPath();
+			if (ctx.roundRect) ctx.roundRect(sx, sy, size, size, size * 0.22);
+			else ctx.rect(sx, sy, size, size);
+			ctx.fill();
+			ctx.fillStyle = "#0b0a08";
+			ctx.beginPath();
+			ctx.arc(sx + size / 2, sy + size / 2, size * 0.24, 0, Math.PI * 2);
+			ctx.fill();
+			ctx.globalAlpha = 1;
+		}
+
+		function rebuildSceneLayer() {
+			const dpr = window.devicePixelRatio || 1;
+			const w = window.innerWidth;
+			const h = window.innerHeight;
+			if (!sceneLayer) sceneLayer = document.createElement("canvas");
+			sceneLayer.width = (w + 24) * dpr;
+			sceneLayer.height = h * dpr;
+			const ctx = sceneLayer.getContext("2d");
+			ctx.scale(dpr, dpr);
+			sceneTwinkle = [];
+			sceneBlots = [];
+			const fx = fxConfig();
+			if (sceneType === "star") buildStarScene(ctx, w + 24, h, fx);
+			else buildInkScene(ctx, w + 24, h);
+		}
+
+		function startScene(skinId) {
+			if (!sceneEl) return;
+			if (sceneSkinId !== skinId) {
+				sceneSkinId = skinId;
+				sceneType = skinId === "xingkong" ? "star" : "ink";
+				rebuildSceneLayer();
+			}
+			const dpr = window.devicePixelRatio || 1;
+			if (sceneEl.width !== window.innerWidth * dpr || sceneEl.height !== window.innerHeight * dpr) {
+				sceneEl.width = window.innerWidth * dpr;
+				sceneEl.height = window.innerHeight * dpr;
+				rebuildSceneLayer();
+			}
+			if (sceneRunning) return;
+			if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+				paintScene(0);
+				cancelAnimationFrame(sceneRaf);
+				return;
+			}
+			sceneRunning = true;
+			sceneRaf = requestAnimationFrame(paintScene);
+		}
+
+		function stopScene() {
+			if (!sceneRunning) return;
+			cancelAnimationFrame(sceneRaf);
+			sceneRunning = false;
+		}
+
+		function paintScene(now) {
+			const canvas = sceneEl;
+			if (!canvas) return;
+			const dpr = window.devicePixelRatio || 1;
+			const w = window.innerWidth;
+			const h = window.innerHeight;
+			if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
+				canvas.width = w * dpr;
+				canvas.height = h * dpr;
+				rebuildSceneLayer();
+			}
+			const ctx = canvas.getContext("2d");
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			if (!sceneLayer) return;
+			// slow drift (0-10px, ~2min cycle) — genuine motion
+			const drift = Math.abs(Math.sin(now * 0.00005)) * 10;
+			ctx.drawImage(sceneLayer, -drift * dpr, 0);
+			// twinkling bright stars
+			const sprite = getStarSprite();
+			for (const s of sceneTwinkle) {
+				const a = s.base * (0.5 + 0.5 * Math.sin(now * s.freq + s.phase));
+				if (a < 0.04) continue;
+				ctx.globalAlpha = a;
+				ctx.drawImage(sprite, s.x - s.size / 2, s.y - s.size / 2, s.size, s.size);
+			}
+			ctx.globalAlpha = 1;
+			// dissolving ink blots (ink scenes only)
+			if (sceneType === "ink") {
+				if (now > sceneNextBlotAt && sceneBlots.length < 4) {
+					const fx = fxConfig();
+					sceneBlots.push({
+						x: Math.random() * canvas.width,
+						y: Math.random() * canvas.height * 0.8,
+						r: (30 + Math.random() * 50) * dpr,
+						t: 0,
+						maxT: 2200,
+						color: fx.color
+					});
+					sceneNextBlotAt = now + 5000 + Math.random() * 5000;
+				}
+				for (let i = sceneBlots.length - 1; i >= 0; i--) {
+					const b = sceneBlots[i];
+					b.t += 16;
+					const k = b.t / b.maxT;
+					if (k >= 1) {
+						sceneBlots.splice(i, 1);
+						continue;
+					}
+					const r = b.r * (0.25 + 0.75 * k);
+					const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, r);
+					g.addColorStop(0, hexToRgba(b.color, 0.22 * (1 - k)));
+					g.addColorStop(1, hexToRgba(b.color, 0));
+					ctx.fillStyle = g;
+					ctx.beginPath();
+					ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
+					ctx.fill();
+				}
+			}
+			sceneRaf = requestAnimationFrame(paintScene);
+		}
+		//#endregion
+
+		//#region FX engine (overlay effects, per skin)
+		/**
+		 * Overlay effect canvas on top of the scene layer:
+		 *   "ink"  — slow ink drops (glow-cored) + light dust motes
+		 *   "star" — meteor streaks + light dust (starfield lives in the
+		 *            scene layer)
 		 * Amplitudes stay small; reduced-motion renders one static frame.
 		 */
 		let fxRaf = 0;
@@ -765,16 +1171,17 @@ html.dsh-gf-on #dsh-gf-ink { display: block; }
 		}
 
 		function makeDrops(type) {
-			const count = type === "star" ? 12 : 30;
+			const count = type === "star" ? 12 : 24;
 			const drops = [];
 			for (let i = 0; i < count; i++) {
 				drops.push({
 					x: Math.random(),
 					y: Math.random(),
 					r: type === "star" ? 1.5 + Math.random() * 3 : 6 + Math.random() * 14,
-					vy: 0.00005 + Math.random() * 0.00015,
+					// very slow drift (not bubble-like rising)
+					vy: 0.00001 + Math.random() * 0.00003,
 					phase: Math.random() * Math.PI * 2,
-					amp: 0.008 + Math.random() * 0.018,
+					amp: 0.01 + Math.random() * 0.022,
 					alpha: 0.18 + Math.random() * 0.14
 				});
 			}
@@ -783,18 +1190,6 @@ html.dsh-gf-on #dsh-gf-ink { display: block; }
 
 		const inkDrops = makeDrops("ink");
 		const dust = makeDrops("star");
-
-		const stars = [];
-		for (let i = 0; i < 80; i++) {
-			stars.push({
-				x: Math.random(),
-				y: Math.random() * 0.95,
-				r: 0.5 + Math.random() * 2,
-				base: 0.25 + Math.random() * 0.6,
-				phase: Math.random() * Math.PI * 2,
-				freq: 0.0005 + Math.random() * 0.0012
-			});
-		}
 
 		/** Spawn one meteor streak (coordinates in device pixels). */
 		function spawnMeteor() {
@@ -832,17 +1227,7 @@ html.dsh-gf-on #dsh-gf-ink { display: block; }
 			const fx = fxConfig();
 
 			if (fx.type === "star") {
-				// twinkling stars: sinusoidal breathing, phase-shifted
-				for (const s of stars) {
-					const a = s.base * (0.55 + 0.45 * Math.sin(now * s.freq + s.phase));
-					if (a < 0.02) continue;
-					ctx.beginPath();
-					ctx.arc(s.x * canvas.width, s.y * canvas.height, s.r * dpr, 0, Math.PI * 2);
-					ctx.fillStyle = "#dfe7ff";
-					ctx.globalAlpha = a;
-					ctx.fill();
-				}
-				// meteors
+				// meteors (the starfield itself lives in the scene layer)
 				if (now > fxNextMeteorAt && fxMeteors.length < 3) spawnMeteor();
 				for (let i = fxMeteors.length - 1; i >= 0; i--) {
 					const m = fxMeteors[i];
@@ -948,8 +1333,15 @@ html.dsh-gf-on #dsh-gf-ink { display: block; }
 		function initParticles() {
 			if (typeof document === "undefined") return;
 			document.addEventListener("visibilitychange", () => {
-				if (document.hidden) stopParticles();
-				else if (particlesEnabled && activeSkin()) startParticles();
+				if (document.hidden) {
+					stopParticles();
+					stopScene();
+					return;
+				}
+				const skin = activeSkin();
+				if (!skin) return;
+				if (particlesEnabled) startParticles();
+				if (!document.documentElement.classList.contains("dsh-gf-upload")) startScene(skin);
 			});
 		}
 		//#endregion

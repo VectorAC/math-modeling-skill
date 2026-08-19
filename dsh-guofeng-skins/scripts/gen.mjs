@@ -6,8 +6,12 @@
  * regenerates:
  *
  *   - themes/<id>.json          one JSON per skin (for eyeballing)
- *   - lib/client.js             the browser bundle, with SKINS / WALLPAPERS /
- *                               INK inlined from lib/client.tpl.js
+ *   - lib/client.js             the browser bundle, with SKINS / INK (FX
+ *                               config) inlined from lib/client.tpl.js
+ *
+ * Built-in wallpapers are NOT generated here: the browser half renders them
+ * live as canvas scenes (see client.tpl.js scene renderer), so they breathe,
+ * twinkle and drift instead of being static images.
  *
  * Each skin's token table follows the official --dsw-static-* / --dsw-alias-*
  * / --dsw-specific-* / --shiki-* vocabulary of the DSH web theme runtime
@@ -65,18 +69,6 @@ function rampAt(anchors, at) {
 }
 
 const fillRamp = (positions, anchors) => Object.fromEntries(positions.map((p) => [p, rampAt(anchors, Number(p))]));
-
-// ── deterministic PRNG for wallpaper generation (mulberry32) ────────────────
-
-function mulberry32(seed) {
-  let a = seed >>> 0;
-  return () => {
-    a |= 0; a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 
 // ── per-skin token tables ───────────────────────────────────────────────────
 
@@ -299,174 +291,10 @@ function buildTheme(palette) {
   };
 }
 
-// ── wallpaper SVG generator (deterministic per skin seed) ───────────────────
-
-const W = 1600, H = 900;
-
-function ridgePath(rand, peakY, troughY, fill, opacity) {
-  // One mountain layer: piecewise-linear ridge from left to right.
-  let d = `M 0 ${H}`;
-  const steps = 7;
-  let y = peakY + (troughY - peakY) * rand();
-  d += ` L 0 ${y.toFixed(1)}`;
-  for (let i = 1; i <= steps; i++) {
-    y = peakY + (troughY - peakY) * rand();
-    d += ` L ${((W * i) / steps).toFixed(1)} ${y.toFixed(1)}`;
-  }
-  d += ` L ${W} ${H} Z`;
-  return `<path d="${d}" fill="${fill}" opacity="${opacity}"/>`;
-}
-
-/** One smooth mountain layer: quadratic-midpoint ridge from left to right. */
-function ridgeLayer(rand, peakY, troughY, fill, opacity) {
-  const steps = 6;
-  const pts = [];
-  for (let i = 0; i <= steps; i++) {
-    pts.push([(W * i) / steps, peakY + (troughY - peakY) * rand()]);
-  }
-  let d = `M 0 ${H} L 0 ${pts[0][1].toFixed(1)}`;
-  for (let i = 0; i < pts.length - 1; i++) {
-    const [x0, y0] = pts[i];
-    const [x1, y1] = pts[i + 1];
-    const mx = (x0 + x1) / 2;
-    const my = (y0 + y1) / 2;
-    d += ` Q ${x0.toFixed(1)} ${y0.toFixed(1)} ${mx.toFixed(1)} ${my.toFixed(1)}`;
-  }
-  const last = pts[pts.length - 1];
-  d += ` L ${W} ${H} Z`;
-  return `<path d="${d}" fill="${fill}" opacity="${opacity}"/>`;
-}
-
-/** 印章 seal stamp: small rounded square + arcs, 落款 feel. */
-function sealStamp(rand, color, side) {
-  const size = 46 + rand() * 20;
-  const margin = 42;
-  const x = side === "left" ? margin : W - margin - size;
-  const y = H * 0.16 + rand() * H * 0.1;
-  const r = size * 0.22;
-  const rx = x + size / 2;
-  const ry = y + size / 2;
-  const arcR = size * 0.24;
-  return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${size.toFixed(1)}" height="${size.toFixed(1)}" rx="${r.toFixed(1)}" fill="${color}" opacity="0.85"/>` +
-    `<path d="M ${(rx - arcR).toFixed(1)} ${ry.toFixed(1)} A ${arcR.toFixed(1)} ${arcR.toFixed(1)} 0 1 1 ${(rx + arcR).toFixed(1)} ${ry.toFixed(1)} A ${arcR.toFixed(1)} ${arcR.toFixed(1)} 0 0 0 ${(rx - arcR).toFixed(1)} ${ry.toFixed(1)}" fill="${side === "left" ? "#0f0e0b" : "#f4efe0"}" opacity="0.9"/>`;
-}
-
-/** 水墨山水 wallpaper: strong contrast, accent-tinted far ridges, ink-dark near ridge, mist, seal. */
-function inkWallpaper(palette, rand) {
-  const { base, panel, accent, accent2, red, gold } = palette.anchor;
-  const defs = [];
-  const layers = [];
-
-  // soft radial glow top-right in accent2 (stronger than v1)
-  const glowId = "gf-glow";
-  defs.push(`<radialGradient id="${glowId}" cx="82%" cy="10%" r="65%"><stop offset="0%" stop-color="${accent2}" stop-opacity="0.45"/><stop offset="100%" stop-color="${accent2}" stop-opacity="0"/></radialGradient>`);
-  layers.push(`<rect x="0" y="0" width="${W}" height="${H}" fill="url(#${glowId})"/>`);
-
-  // far ridge: accent-tinted (visible against the dark base)
-  layers.push(ridgeLayer(rand, H * 0.22, H * 0.4, mix(accent, base, 0.35), 0.75));
-  // mid ridge: lighter panel wash
-  layers.push(ridgeLayer(rand, H * 0.38, H * 0.58, mix(panel, base, 0.25), 0.85));
-  // near ridge: ink-black silhouette
-  layers.push(ridgeLayer(rand, H * 0.58, H * 0.8, mix(base, "#000000", 0.3), 0.95));
-
-  // mist bands (2-3) — accent-tinted, crossing the ridges
-  const mistDef = "gf-mist";
-  defs.push(`<linearGradient id="${mistDef}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${accent}" stop-opacity="0.18"/><stop offset="100%" stop-color="${accent}" stop-opacity="0.03"/></linearGradient>`);
-  const mistCount = 2 + Math.floor(rand() * 2);
-  for (let i = 0; i < mistCount; i++) {
-    const y = H * 0.28 + rand() * H * 0.42;
-    const h = H * (0.08 + rand() * 0.08);
-    layers.push(`<rect x="0" y="${y.toFixed(0)}" width="${W}" height="${h.toFixed(0)}" fill="url(#${mistDef})" opacity="${0.4 + rand() * 0.2}"/>`);
-  }
-
-  // ink drops (8-14) drifting over the mountains
-  const drops = 8 + Math.floor(rand() * 7);
-  for (let i = 0; i < drops; i++) {
-    const cx = rand() * W;
-    const cy = H * 0.15 + rand() * H * 0.6;
-    const r = 14 + rand() * 46;
-    const id = `gf-ink-${cx.toFixed(0)}-${cy.toFixed(0)}`;
-    defs.push(`<radialGradient id="${id}"><stop offset="0%" stop-color="${accent}" stop-opacity="0.55"/><stop offset="100%" stop-color="${accent}" stop-opacity="0"/></radialGradient>`);
-    layers.push(`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r.toFixed(1)}" fill="url(#${id})"/>`);
-  }
-
-  // seal stamp (朱砂 for skins with a red identity, 鎏金 otherwise)
-  const sealColor = red && red !== accent ? red : gold;
-  layers.push(sealStamp(rand, sealColor, rand() > 0.5 ? "left" : "right"));
-
-  return { defs, layers };
-}
-
-/** 星野 wallpaper: nebula + stars + meteor trails + crescent moon. */
-function starWallpaper(palette, rand) {
-  const { base, accent, accent2, gold } = palette.anchor;
-  const defs = [];
-  const layers = [];
-
-  // nebula ×2 (purple + cyan radial washes)
-  const neb1 = "gf-neb1", neb2 = "gf-neb2";
-  defs.push(`<radialGradient id="${neb1}" cx="22%" cy="30%" r="55%"><stop offset="0%" stop-color="${accent}" stop-opacity="0.22"/><stop offset="100%" stop-color="${accent}" stop-opacity="0"/></radialGradient>`);
-  defs.push(`<radialGradient id="${neb2}" cx="80%" cy="70%" r="60%"><stop offset="0%" stop-color="${accent2}" stop-opacity="0.18"/><stop offset="100%" stop-color="${accent2}" stop-opacity="0"/></radialGradient>`);
-  layers.push(`<rect x="0" y="0" width="${W}" height="${H}" fill="url(#${neb1})"/>`);
-  layers.push(`<rect x="0" y="0" width="${W}" height="${H}" fill="url(#${neb2})"/>`);
-
-  // crescent moon (gold)
-  const mx = W * (0.74 + rand() * 0.1);
-  const my = H * (0.12 + rand() * 0.08);
-  const mr = 52 + rand() * 18;
-  layers.push(`<circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="${mr.toFixed(1)}" fill="${gold}" opacity="0.9"/>`);
-  layers.push(`<circle cx="${(mx - mr * 0.32).toFixed(1)}" cy="${(my - mr * 0.18).toFixed(1)}" r="${(mr * 0.88).toFixed(1)}" fill="${base}"/>`);
-
-  // stars: 70-110, varied size/opacity, ~10% with soft glow
-  const stars = 70 + Math.floor(rand() * 41);
-  for (let i = 0; i < stars; i++) {
-    const sx = rand() * W;
-    const sy = rand() * H * 0.9;
-    const sr = 0.8 + rand() * 2;
-    const alpha = 0.3 + rand() * 0.6;
-    if (rand() < 0.1) {
-      layers.push(`<circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="${(sr * 3.2).toFixed(1)}" fill="${accent2}" opacity="${(alpha * 0.12).toFixed(2)}"/>`);
-    }
-    layers.push(`<circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="${sr.toFixed(1)}" fill="${rand() > 0.75 ? gold : "#dfe7ff"}" opacity="${alpha.toFixed(2)}"/>`);
-  }
-
-  // meteor trails (2-3): gradient line + bright head
-  const meteors = 2 + Math.floor(rand() * 2);
-  for (let i = 0; i < meteors; i++) {
-    const x0 = rand() * W * 0.8;
-    const y0 = rand() * H * 0.3;
-    const len = 120 + rand() * 160;
-    const angle = (0.5 + rand() * 0.3) * Math.PI / 4;
-    const x1 = x0 + Math.cos(angle) * len;
-    const y1 = y0 + Math.sin(angle) * len;
-    const id = `gf-meteor-${i}`;
-    defs.push(`<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${accent2}" stop-opacity="0.9"/><stop offset="100%" stop-color="${accent2}" stop-opacity="0"/></linearGradient>`);
-    layers.push(`<line x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}" stroke="url(#${id})" stroke-width="2" stroke-linecap="round"/>`);
-    layers.push(`<circle cx="${x0.toFixed(1)}" cy="${y0.toFixed(1)}" r="2.4" fill="${accent2}" opacity="0.95"/>`);
-  }
-
-  return { defs, layers };
-}
-
-function buildWallpaper(palette) {
-  const rand = mulberry32(palette.seed);
-  const { base } = palette.anchor;
-  const star = palette.id === "xingkong";
-  const { defs, layers } = star ? starWallpaper(palette, rand) : inkWallpaper(palette, rand);
-
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice">` +
-    `<defs>${defs.join("")}</defs>` +
-    `<rect x="0" y="0" width="${W}" height="${H}" fill="${base}"/>` +
-    layers.join("") +
-    `</svg>`;
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
-}
-
 // ── assemble + emit ─────────────────────────────────────────────────────────
 
 const palettes = SKIN_IDS.map((id) => JSON.parse(readFileSync(join(ROOT, "palette", `${id}.json`), "utf8")));
 const themes = palettes.map(buildTheme);
-const wallpapers = Object.fromEntries(palettes.map((p) => [p.id, buildWallpaper(p)]));
 // FX per skin: {type, color, glow} — the canvas effect engine picks ink drops
 // for the guofeng skins and starfield/meteors for the anime sky skin.
 const fxMap = Object.fromEntries(themes.map((t) => [t.full.id, {
@@ -480,15 +308,13 @@ for (const theme of themes) {
 }
 
 const template = readFileSync(join(ROOT, "lib", "client.tpl.js"), "utf8");
-for (const marker of ["__SKINS__", "__WALLPAPERS__", "__INK__"]) {
+for (const marker of ["__SKINS__", "__INK__"]) {
   if (!template.includes(marker)) throw new Error(`lib/client.tpl.js has no ${marker} marker`);
 }
 const skinsJson = themes.map((theme) => JSON.stringify(theme.registered, null, 2)).join(",\n").split("\n").map((line) => `\t\t${line}`).join("\n");
-const wallpapersJson = Object.entries(wallpapers).map(([id, url]) => `\t\t${id}: ${JSON.stringify(url)},`).join("\n");
 const inkJson = Object.entries(fxMap).map(([id, fx]) => `\t\t${id}: { type: ${JSON.stringify(fx.type)}, color: ${JSON.stringify(fx.color)}, glow: ${JSON.stringify(fx.glow)} },`).join("\n");
 const generated = template
   .replace("__SKINS__", skinsJson)
-  .replace("__WALLPAPERS__", wallpapersJson)
   .replace("__INK__", inkJson);
 writeFileSync(join(ROOT, "lib", "client.js"), generated);
 
