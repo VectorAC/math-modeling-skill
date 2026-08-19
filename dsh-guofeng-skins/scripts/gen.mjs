@@ -154,14 +154,16 @@ function buildRamps(a) {
   const G = { base, panel, panel2, panel3, raised, line, ink, ink2, accent, accent2, gold, success, CANVAS };
 
   // ── alias layer — surfaces consumed by the UI; glass alpha baked in ──
+  // Alphas are tuned so the wallpaper stays clearly visible through panels
+  // (bg-base ~0.75 keeps text readable while letting the ink-wash through).
   const aliases = {
-    "bg-base": rgba(base, 0.94),
-    "bg-layer-1": rgba(panel, 0.78),
-    "bg-layer-2": rgba(panel2, 0.68),
-    "bg-layer-3": rgba(panel3, 0.62),
-    "bg-module-platform": rgba(panel3, 0.6),
-    "bg-overlay": rgba(raised, 0.6),
-    "bg-multi-select": rgba(raised, 0.6),
+    "bg-base": rgba(base, 0.76),
+    "bg-layer-1": rgba(panel, 0.6),
+    "bg-layer-2": rgba(panel2, 0.5),
+    "bg-layer-3": rgba(panel3, 0.45),
+    "bg-module-platform": rgba(panel3, 0.5),
+    "bg-overlay": rgba(raised, 0.55),
+    "bg-multi-select": rgba(raised, 0.55),
     "bg-skeleton": rgba(ink, 0.05),
     "bg-mask-1": "rgba(0, 0, 0, 0.45)",
     "bg-mask-2": "rgba(0, 0, 0, 0.55)",
@@ -180,12 +182,12 @@ function buildRamps(a) {
     "brand-primary-new-colorprimary-new-color": accent,
     "brand-text": accent2,
     "button-contrast-fill": base,
-    "button-elevated-fill": rgba(panel2, 0.8),
-    "button-floating-fill": rgba(raised, 0.8),
+    "button-elevated-fill": rgba(panel2, 0.75),
+    "button-floating-fill": rgba(raised, 0.75),
     "button-floating-hover": rgba(line, 0.55),
     "button-ghost-active-border": line,
-    "button-ghost-active-fill": rgba(panel2, 0.7),
-    "button-ghost-active-hover": rgba(raised, 0.7),
+    "button-ghost-active-fill": rgba(panel2, 0.65),
+    "button-ghost-active-hover": rgba(raised, 0.65),
     "button-info-fill": accent,
     "button-info-hover": mix(accent, base, 0.4),
     "button-primary-dimmed": mix(accent, base, 0.2),
@@ -198,7 +200,7 @@ function buildRamps(a) {
     "interactive-bg-hover": rgba(ink, 0.08),
     "interactive-bg-hover-accent": rgba(accent, 0.16),
     "interactive-bg-hover-danger": rgba(red, 0.14),
-    "interactive-bg-hover-solid": rgba(raised, 0.85),
+    "interactive-bg-hover-solid": rgba(raised, 0.8),
     "label-caption": CANVAS.caption,
     "label-dimmed": canvas["500"],
     "label-primary": CANVAS.primary,
@@ -208,12 +210,12 @@ function buildRamps(a) {
     "label-primary-inverted": CANVAS.tooltip,
     "label-secondary": CANVAS.secondary,
     "label-tertiary": CANVAS.tertiary,
-    "markdown-citation": rgba(raised, 0.7),
-    "markdown-code-block": rgba(panel2, 0.75),
-    "markdown-code-block-banner": rgba(panel, 0.7),
-    "markdown-code-segment-selected": rgba(raised, 0.7),
-    "markdown-code-segment-unselected": rgba(panel2, 0.7),
-    "markdown-inline-code": rgba(raised, 0.7),
+    "markdown-citation": rgba(raised, 0.6),
+    "markdown-code-block": rgba(panel2, 0.55),
+    "markdown-code-block-banner": rgba(panel, 0.55),
+    "markdown-code-segment-selected": rgba(raised, 0.6),
+    "markdown-code-segment-unselected": rgba(panel2, 0.55),
+    "markdown-inline-code": rgba(raised, 0.6),
     "markdown-placeholder": canvas["500"],
     "markdown-tag": accent,
     "scrollbar-bg-l1": rgba(line, 0.25),
@@ -231,28 +233,28 @@ function buildRamps(a) {
     "state-warn-primary": amber,
     "state-warn-secondary": rgba(amber, 0.16),
     "state-warn-tertiary": rgba(amber, 0.1),
-    "toast-bg": rgba(panel2, 0.8),
-    "tooltip-bg": rgba(raised, 0.86)
+    "toast-bg": rgba(panel2, 0.75),
+    "tooltip-bg": rgba(raised, 0.8)
   };
 
   /** Component-specific surfaces (sidebar, bubbles, composer…). */
   const specifics = {
-    "sidebar-fill": rgba(base, 0.82),
-    "sidebar-nav-item-active": rgba(raised, 0.75),
+    "sidebar-fill": rgba(base, 0.72),
+    "sidebar-nav-item-active": rgba(raised, 0.65),
     "sidebar-nav-item-active-accent": rgba(accent, 0.25),
-    "sidebar-nav-item-hover": rgba(panel2, 0.6),
-    "bubble": rgba(panel2, 0.72),
-    "bubble-highlight": rgba(raised, 0.7),
-    "input-major": rgba(base, 0.82),
-    "login-input": rgba(base, 0.82),
-    "menu": rgba(panel2, 0.8),
-    "selector": rgba(raised, 0.72),
-    "tip": rgba(panel2, 0.72)
+    "sidebar-nav-item-hover": rgba(panel2, 0.55),
+    "bubble": rgba(panel2, 0.6),
+    "bubble-highlight": rgba(raised, 0.6),
+    "input-major": rgba(base, 0.72),
+    "login-input": rgba(base, 0.72),
+    "menu": rgba(panel2, 0.65),
+    "selector": rgba(raised, 0.6),
+    "tip": rgba(panel2, 0.6)
   };
 
   /** Code highlighting — official semantics on our anchors. */
   const shiki = {
-    "background": rgba(panel2, 0.75),
+    "background": rgba(panel2, 0.55),
     "foreground": ink,
     "token-comment": rgba(ink2, 0.85),
     "token-constant": gold,

@@ -642,7 +642,14 @@ html.dsh-gf-on #dsh-gf-ink { display: block; }
 		function applyWallpaper(skinId, cfg) {
 			const html = document.documentElement;
 			html.classList.toggle("dsh-gf-on", Boolean(skinId));
-			if (!skinId || bgEl === null) return;
+			if (bgEl === null) return;
+			if (!skinId) {
+				// built-in appearance: hide the wallpaper and pause particles
+				// (renderBg(null) clears the inline display:block)
+				renderBg(null);
+				applyParticles(false);
+				return;
+			}
 			const src = (cfg && cfg.src) || WALLPAPERS[skinId];
 			renderBg(src);
 			html.style.setProperty("--dsh-gf-mask", String(cfg ? cfg.mask : 0));
@@ -1058,8 +1065,26 @@ html.dsh-gf-on #dsh-gf-ink { display: block; }
 			"theme"
 		];
 
-		/** Apply a skin id (from either the settings row or the floating panel). */
+		/**
+		 * Restore-state shared by apply() and applySetSkin(): the last
+		 * observed built-in appearance value, and whether a saved skin may
+		 * still be re-asserted.
+		 */
+		let lastSeenDurable = null;
+		let savedValid = false;
+
+		/**
+		 * Apply a skin id (from either the settings row or the floating
+		 * panel). Picking DEFAULT_SKIN is a deliberate user action: clear the
+		 * saved skin AND mark the durable value so the upcoming theme/change
+		 * with "system" is not misread as an adoption echo that re-asserts
+		 * the previous skin (the "can't switch back" bug).
+		 */
 		function applySetSkin(id) {
+			if (id === DEFAULT_SKIN) {
+				savedValid = false;
+				lastSeenDurable = DEFAULT_SKIN;
+			}
 			ctxHolder.theme.setTheme(id);
 			writeSavedSkin(id);
 		}
@@ -1104,8 +1129,8 @@ html.dsh-gf-on #dsh-gf-ink { display: block; }
 			// and drops our stored choice, so the user's explicit appearance
 			// choice always wins afterwards.
 			const saved = readSavedSkin();
-			let savedValid = typeof saved === "string" && saved !== DEFAULT_SKIN && SKINS.some((skinDefinition) => skinDefinition.id === saved);
-			let lastSeenDurable = null;
+			savedValid = typeof saved === "string" && saved !== DEFAULT_SKIN && SKINS.some((skinDefinition) => skinDefinition.id === saved);
+			lastSeenDurable = null;
 			const bootUntil = Date.now() + 15000;
 
 			/** Re-assert the saved skin from a fresh task. */
@@ -1178,10 +1203,7 @@ html.dsh-gf-on #dsh-gf-ink { display: block; }
 				skinBound = actions;
 				syncSkin(ctx.theme.getTheme());
 				return {
-					setSkin: (id) => {
-						ctx.theme.setTheme(id);
-						writeSavedSkin(id);
-					}
+					setSkin: (id) => applySetSkin(id)
 				};
 			};
 			ctx.slots.inject("settings.general.item", () => ctx.slots.register({
