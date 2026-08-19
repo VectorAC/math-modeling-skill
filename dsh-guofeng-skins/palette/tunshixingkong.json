@@ -1,0 +1,18 @@
+{
+  "id": "tunshixingkong",
+  "name": "吞噬星空",
+  "nameEn": "Tunshi Xingkong",
+  "seed": 2026,
+  "anchor": {
+    "base": "#05070f",
+    "panel": "#10141f",
+    "ink": "#c7d2e0",
+    "ink2": "#7d8798",
+    "accent": "#3f7fff",
+    "accent2": "#8a5cff",
+    "gold": "#ff8c42",
+    "red": "#e05a4a",
+    "success": "#37c871",
+    "amber": "#ff8c42"
+  }
+}
