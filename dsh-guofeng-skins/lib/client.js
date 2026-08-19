@@ -1543,11 +1543,16 @@ window.__ModuleLoader__.load({
 		 * token rewriting is needed here.
 		 */
 		const CHROME_CSS = `
-/* ===== layers ===== */
-html.dsh-gf-on { background: var(--dsw-alias-bg-base); }
-html.dsh-gf-on #root { position: relative; z-index: 1; }
+/* ===== layers =====
+   Layering strategy: the wallpaper layers sit at z-index:-1 with the
+   html/body backgrounds made transparent, so the app content always paints
+   above them no matter what the app's real root element is (raising #root
+   is unreliable across DSH versions and broke the settings overlay). The
+   app's own panels are translucent (skin tokens), letting the scene show
+   through their alpha. */
+html.dsh-gf-on body { background: transparent !important; }
 #dsh-gf-wallpaper {
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
   width: 100%; height: 100%; object-fit: cover; object-position: center;
   opacity: 1; display: none; transition: opacity 0.3s ease;
   /* Ken Burns: a static image slowly pans/zooms like a live wallpaper */
@@ -1585,18 +1590,18 @@ html.dsh-gf-glass body {
   --dsw-specific-menu: color-mix(in srgb, var(--dsw-static-neutral-bluish-850) calc(var(--dsh-gf-panel-opacity, 1) * 100%), transparent) !important;
 }
 #dsh-gf-mask {
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background: rgba(0, 0, 0, var(--dsh-gf-mask, 0));
 }
 #dsh-gf-ink {
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
   display: none;
 }
 html.dsh-gf-on #dsh-gf-wallpaper { display: block; }
 html.dsh-gf-on #dsh-gf-ink { display: block; }
 /* built-in scene canvas (rendered wallpaper); hidden while a user upload is shown */
 #dsh-gf-scene {
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
   display: none; width: 100%; height: 100%;
 }
 html.dsh-gf-on #dsh-gf-scene { display: block; }
@@ -1984,9 +1989,10 @@ html.dsh-gf-upload #dsh-gf-scene { display: none; }
 			// milky way band (bluish-white)
 			drawMilkyWay(ctx, w, h, [198, 210, 240], 0.5);
 
-			// stars: power-law sizes; few bright with glow + diffraction spikes
+			// stars: sparse power-law sizes (reference sky: ~0.2% bright px);
+			// few bright ones with glow + diffraction spikes, calm twinkle
 			const sprite = getStarSprite();
-			const count = 420 + Math.floor(Math.random() * 160);
+			const count = 180 + Math.floor(Math.random() * 80);
 			for (let i = 0; i < count; i++) {
 				const r = 0.3 + Math.pow(Math.random(), 3) * 2.4;
 				const x = Math.random() * w;
@@ -2021,8 +2027,8 @@ html.dsh-gf-upload #dsh-gf-scene { display: none; }
 					ctx.moveTo(x, y - 16 * r);
 					ctx.lineTo(x, y + 16 * r);
 					ctx.stroke();
-					if (Math.random() > 0.35) {
-						sceneTwinkle.push({ x, y, size, base: alpha, phase: Math.random() * Math.PI * 2, freq: 0.0004 + Math.random() * 0.0009 });
+					if (Math.random() > 0.55) {
+						sceneTwinkle.push({ x, y, size, base: alpha, phase: Math.random() * Math.PI * 2, freq: 0.0002 + Math.random() * 0.0004 });
 					}
 				} else {
 					ctx.globalAlpha = alpha;
@@ -2255,7 +2261,7 @@ html.dsh-gf-upload #dsh-gf-scene { display: none; }
 		}
 
 		function makeDrops(type) {
-			const count = type === "star" ? 12 : 24;
+			const count = type === "star" ? 6 : 14;
 			const drops = [];
 			for (let i = 0; i < count; i++) {
 				drops.push({
