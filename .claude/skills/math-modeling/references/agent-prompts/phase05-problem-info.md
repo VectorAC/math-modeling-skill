@@ -9,9 +9,10 @@
 ## 工具面（提示词级约束）
 
 本 agent 的工具面 = **只读 + 白名单单命令**。
-- 允许：Read / Glob / Grep；**唯一允许的执行命令**是：
-  `python <skill目录>/references/scripts/extract_input.py <输入文件> -o <raw输出路径>`
-  以及兜底链中的调用（pdftotext / pypdf / pdftoppm / tesseract / paddleocr）
+- 允许：Read（含图片/PDF 页的直接视觉识读——模型具备多模态，可直接看页读文）/ Glob / Grep；**允许的执行命令**：
+  - 视觉主路径：`pdftoppm -r 150 <pdf 或 docx 转出的 pdf> <png前缀>`（texlive 自带；xlsx/csv 用脚本抽）
+  - 数字精确层：`python <skill目录>/references/scripts/extract_input.py <输入文件> -o <raw输出路径>`
+  - 兜底链：pdftotext / pypdf / tesseract / paddleocr（仅当纯文本层缺失而交付物需要）
 - 禁止：除此之外的任何代码运行、任何文件创建/修改（raw/ 中间产物由脚本 -o 指定，归白名单）
 - 说明：这是提示词级工具面——白名单外的命令一律上报主 agent 决定
 
@@ -21,25 +22,26 @@
 
 ## 执行步骤
 
-### 1. 逐文件抽取
-对每个输入文件运行统一抽取脚本：
+### 1. 逐文件抽取（视觉识读为主）
 
+**主路径——视觉识读**（模型可直接看页，比文本抽取更完整，能读到公式/表格/附图）：
 ```
-python <skill目录>/references/scripts/extract_input.py <输入文件> -o .claude/math-modeling/problem-info/raw/<原文件名>.md
+pdftoppm -r 150 <pdf> .claude/math-modeling/problem-info/raw/<原文件名-p000>
 ```
+逐页 Read 生成的 PNG，认读正文/数据表/公式/附录；docx 先经 officecli 转 PDF 或用 officecli 内容直接读，xlsx/csv 走 extract_input.py 抽表。
 
-脚本按扩展名自动分派：PDF→pdftotext、docx/xlsx→officecli、txt/csv→直读。脚本 stdout 的 `OK:` 行即为摘要；出现 `SKIP:`/`ERROR:`/「扫描版」提示时如实记录。
+**辅助层——精确数字**：再运行 extract_input.py（PDF→pdftotext、docx/xlsx→officecli、txt/csv→直读），与视觉识读**交叉核对数字/参数**（视觉确认语义、脚本确认精确位数）。
 
 **时间预算与进度汇报（强制）：**
-- 每个文件开始抽取前，先告知用户「正在提取 [文件名]（预计 [X] 内出结果）」
+- 每个文件开始前，先告知用户「正在提取 [文件名]（预计 [X] 内出结果）」
 - **单文件 >5min 未出结果 → 停下汇报**（当前卡在哪个文件/什么原因/下一步切换什么方案），不静默继续
 - 多个文件时逐文件汇报进度：「N/M 完成，剩余：文件列表」
 
-**兜底链（PDF 文本层损坏时直接跳级，不反复试）：**
-1. pdftotext（脚本默认）
+**兜底链（仅当视觉识读不可行或交付物需要纯文本时，直接跳级不反复试）：**
+1. pdftotext（extract_input.py 默认）
 2. pypdf（Python 兜底）
-3. 前两步输出乱码率过高（连续乱码/大量替换字符/明显不成句）→ 判定文本层损坏，**直接跳到 OCR**：`pdftoppm -r 300 <pdf> <png前缀>` 逐页渲染成 PNG → tesseract / paddleocr 识别
-4. OCR 仍失败（如公式图表混杂严重）→ 立即请用户人工核对/贴文，给出建议（哪几页需要人工），**禁止长时间无输出地尝试**
+3. 输出乱码率过高（连续乱码/大量替换字符/明显不成句）→ 文本层损坏但**不影响视觉主路径**；如需 OCR 副本：`pdftoppm -r 300` → tesseract / paddleocr
+4. OCR 仍失败（公式图表混杂严重）→ 立即请用户人工核对/贴文，给出建议（哪几页需要人工），**禁止长时间无输出地尝试**
 
 **卡住判据：** 用户说「卡住了」→ 立即中断，报告当前状态（已提取哪些/卡在哪/下一步方案），听用户指示。
 
