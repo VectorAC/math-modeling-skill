@@ -15,7 +15,7 @@ description: 数学建模全流程辅助——支持国赛(CUMCM)和美赛(MCM/I
 
 ## 工作空间
 
-激活后响应风格切换为学术化/结构化/教学式推进；三空间口令可用（见「三空间」）；存档与状态在 `.claude/math-modeling/`（checkpoint.json + archive/）。
+激活后响应风格切换为学术化/结构化/教学式推进；三空间口令可用（见「四空间」）；存档与状态在 `.claude/math-modeling/`（checkpoint.json + archive/）。
 
 ## 阶段地图
 
