@@ -62,6 +62,7 @@
 - **国赛图表文字全中文（硬性）**：坐标轴/图例/标题/刻度不得出现英文；MATLAB 需显式设置中文字体（如 `set(groot,'DefaultAxesFontName','SimHei')` 或逐图 `set(gca,'FontName','Songti')`，否则中文不渲染/告警），导出用 export_fig 保字体嵌入
 - 工具箱速查（可选加装，FEX 免费）：热图 → special-heatmap（`SHeatmap`+`setText` 格内数值标注+`setPatchMN` 单格高亮标最优解+`showStars` 显著性星号；论文只用 'sq'/'triu' 形态，花哨形态不用）；统计分面/分组图 → gramm（R2018b+，部分 stat_ 需 Statistics Toolbox）；矢量导出 → export_fig；色卡 → slanCM
 - **图注不进图内、不写进正文**：每张图的「图类型 + 所用库 + 核心函数 + 参数含义」写在脚本头部注释并直接口头告知用户；`docs/figures-notes.md` 降级为可选脚本索引（与脚本头部注释同步，可不再单独生成）
+- **一图一问（出图前先想清楚，写进 `docs/figure-notes.md`）**：每张图出图前先明确「这张图想讲什么」（一图一问：只面向某一个具体结论/趋势/对比）+「为什么这样呈现」（图型选型依据/布局/坐标量级/配色）；与既有图信息互不重复（同一结论不放两张图）。Phase 3 收尾统一汇总为 `docs/figure-notes.md`（每图一个要点块：图意 | 呈现理由，仿 `docs/flowchart-notes.md` 格式）——独立文件，不进正文、不进图内
 - **`fig_*.m` 随代码包交付**：Phase 4 分发时 `code_qN/` 必须包含该题每张图的制图脚本副本
 
 ### 4. 依赖声明
