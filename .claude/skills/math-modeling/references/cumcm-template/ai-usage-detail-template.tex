@@ -13,6 +13,13 @@
 \usepackage[margin=2.5cm]{geometry}
 \usepackage{booktabs,tabularx}
 \usepackage{enumitem}
+% 页码放页脚居中（ctexart 默认在页眉右侧，会与论文版式不一致）
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
 
 \begin{document}
 
