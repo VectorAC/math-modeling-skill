@@ -64,7 +64,7 @@ description: 数学建模全流程辅助——支持国赛(CUMCM)和美赛(MCM/I
 
 ## AI 交互记录
 
-由用户自行记录（AI 不主动收集、不代记）；用户提交记录时 AI 协助排版（国赛：参考文献前的 AI 工具使用声明 + 支撑材料《AI工具使用详情.pdf》，模板见 `references/cumcm-template/ai-usage-detail-template.tex` / 美赛：Report on Use of AI）；Phase 5 提醒一次。
+由用户自行记录（AI 不主动收集、不代记、不提醒）；用户说"要写 AI 使用报告"并提供记录文本时，AI **只填不改**地填入 `references/cumcm-template/ai-usage-detail-template.tex`（国赛《AI工具使用详情.pdf》，参考文献前还需 `\CumcmAIUsed` 声明 / 美赛：Report on Use of AI）。
 
 ## 快速参考：国赛 vs 美赛
 
