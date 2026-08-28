@@ -140,6 +140,15 @@ def check_file(path):
     labels = set()
     refs = set()
     abs_ranges = find_abstract_ranges(lines)
+
+    # 国赛 2026 AI 合规：支撑材料必须含《AI工具使用详情.pdf》（2026-09-01 试行规定）
+    if any(DOCUMENTCLASS_CUMCM.search(line) for line in lines):
+        pdf_candidates = [os.path.join(base, "AI工具使用详情.pdf"),
+                          os.path.join(base, "支撑材料", "AI工具使用详情.pdf")]
+        if not any(os.path.exists(p) for p in pdf_candidates):
+            print(f"{path}: [L2] 国赛支撑材料缺少《AI工具使用详情.pdf》（2026 新规必带项，"
+                  "文件名固定；模板见 references/cumcm-template/ai-usage-detail-template.tex）")
+            issues += 1
     search_dirs = [base] + [os.path.join(base, d) for d in get_graphicspaths(lines)]
     search_dirs += [os.path.join(base, d) for d in get_cls_graphicspaths(base, lines)]
 

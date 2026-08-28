@@ -21,14 +21,14 @@
 ## 输入
 
 - 部件文件：`part_q1.tex` … `part_qN.tex`（N = 题目数量）+ `part_common.tex`（命名约定见 `references/assembly/part-template.tex`）
-- 主模板：`references/cumcm-template/cumcm2025_template.tex` + `cumcmthesis.cls`（**骨架背书**：章节顺序、preamble、三线表/公式/图表环境定义以此为准）
+- 主模板：`references/cumcm-template/cumcm2026_template.tex` + `cumcmthesis.cls`（**骨架背书**：章节顺序、preamble、三线表/公式/图表环境定义以此为准）
 - **格式检查表：`references/checklists/contest-format.md`（格式背书：国赛/美赛格式要求——三线表、图下/表上、中文引号、公式编号、伪代码附录等，组装产物终检以此为准）**
 - 图片文件（各部件引用的 figures）
 - 总框架：`paper-framework.md`（多人模式由 Phase 4 生成，含章节结构 / 组装顺序 / label 命名约定 / 术语格式约定；**结构背书**）
 - 分发文件夹（`part_q1_分发/` 等，含 README / 背景材料 / code_qN）**参与交回核对（步骤 0），不参与拼接**——拼接只接收部件文件、模板与图片
 - 交回文件：`交回/part_q1_分发/` 等（队友改完原样发回、用户放入收件目录）
 
-**组装三依据**：结构以 `paper-framework.md` 为准、格式以 `contest-format.md` 为准、骨架以 `cumcm2025_template.tex` 为准——三者任一缺失时先说明兜底方式再动手。
+**组装三依据**：结构以 `paper-framework.md` 为准、格式以 `contest-format.md` 为准、骨架以 `cumcm2026_template.tex` 为准——三者任一缺失时先说明兜底方式再动手。
 
 ## 执行步骤
 

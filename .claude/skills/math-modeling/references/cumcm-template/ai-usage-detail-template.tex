@@ -1,0 +1,62 @@
+% =========================================================
+%  AI工具使用详情.pdf 支撑材料模板
+%  依据：全国大学生数学建模竞赛人工智能工具使用规定（2026 年试行）
+%  编译：xelatex ai-usage-detail-template.tex（单次即可）
+%  ◇ 使用 AI 工具的参赛作品【必须】提交此支撑材料
+%  ◇ 文件名固定为「AI工具使用详情.pdf」；不得包含参赛者姓名、学校或赛区信息
+%  ◇ 【不要】直接把本文件复制交上去——【】内占位内容必须逐项替换为真实记录
+%  ◇ 与 ai_usage_log.md（用户自记的 AI 交互记录）交叉核对后再定稿
+% =========================================================
+\documentclass[11pt]{ctexart}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{booktabs,tabularx}
+\usepackage[hidelinks]{hyperref}
+\usepackage{enumitem}
+
+\begin{document}
+\begin{center}
+  {\heiti\zihao{3} AI 工具使用详情说明}\\[0.8em]
+  {\zihao{5} 全国大学生数学建模竞赛（2026）参赛作品支撑材料}
+\end{center}
+\vspace{0.8em}
+
+\section*{一、工具信息}
+\begin{tabularx}{\textwidth}{@{}p{4cm}X@{}}
+  \toprule
+  项目 & 填写内容 \\
+  \midrule
+  工具名称 & 【填写实际使用的产品或工具名称，不得写"AI/大模型"等泛指】 \\
+  版本或型号 & 【填写实际版本、模型名称或可识别型号】 \\
+  使用日期 & 【YYYY-MM-DD 至 YYYY-MM-DD】 \\
+  \bottomrule
+\end{tabularx}
+
+\section*{二、具体使用目的和环节}
+逐项说明 AI 用于语言润色、代码调试、资料整理或其他环节；\textbf{不得笼统写"辅助论文"}。
+明确每一步的输入、输出及对应论文位置（如"§3.2 公式推导辅助核对，输出：符号表统一意见，采纳："）。
+
+\section*{三、主要提示方式与使用过程}
+说明主要提示策略与迭代过程，可附具有代表性的交互片段（提示句 + 回复要点，不必全文）。
+\textbf{此节不得包含参赛者姓名、学校或赛区信息。}
+
+\section*{四、采纳、人工修改与核验}
+除语言润色外，逐项记录：AI 输出是否采纳、由谁进行何种人工修改、采用何种数据或实验复核、最终结论是否发生变化。
+
+\section*{五、人工核验清单}
+\begin{enumerate}[label=\arabic*)]
+  \item 核对公式推导、单位、边界条件和符号一致性；
+  \item 在独立环境中运行全部代码并复现论文表图；
+  \item 核验引用、数据来源和事实陈述；
+  \item 确认核心建模与分析由参赛队主导；
+  \item 确认论文声明与本详情文件一致。
+\end{enumerate}
+
+\section*{六、声明一致性}
+\begin{itemize}
+  \item 正文「AI 工具使用声明」所填用途与本文档一致：（\hspace{2em}）
+  \item 本文件已按官方要求命名并随支撑材料提交：（\hspace{2em}）
+\end{itemize}
+
+\vspace{0.5em}
+\noindent\zihao{5}\heiti 本说明由参赛队如实填写并对内容负责。未按要求提供本文件的，按竞赛规定处理。
+\end{document}

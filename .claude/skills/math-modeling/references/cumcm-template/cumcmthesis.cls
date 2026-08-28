@@ -661,4 +661,13 @@ Just choose `xelatex', no `pdflatex' or `latex' and so on.}
 % 上标文献
 \newcommand{\upcite}[1]{$^{\mbox{\scriptsize \cite{#1}}}$}
 \newcommand{\supercite}[1]{\textsuperscript{\textsuperscript{\cite{#1}}}}
+
+% AI 工具使用声明（2026 年试行规定，2026-09-01 起施行）
+% 必须在参考文献之前调用；参赛队固定使用 AI，直接用 \CumcmAIUsed{...}
+\newcommand{\CumcmAIUsed}[1]{%
+  \section*{AI工具使用声明}
+  本参赛队在竞赛过程中使用了AI工具，主要用于#1，详细使用情况见支撑材料。}
+% 若确未使用 AI（仅供备用）：在参考文献前加
+%   \section*{AI工具使用声明}
+%   本参赛队在竞赛过程中未使用任何AI工具。
 \endinput

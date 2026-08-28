@@ -38,7 +38,7 @@ description: 数学建模全流程辅助——支持国赛(CUMCM)和美赛(MCM/I
 - **打磨空间**（「进入打磨」）：只建议不改动；规则见 `references/polishing-space.md`
 - **解释空间**（「讲解一下」）：大白话解释术语/公式，不改文件不推进；规则见 `references/explanation-space.md`
 - **教学空间**（「进入教学」，或讲教学性内容时主 agent 主动询问「要不要进入教学空间？」）：交互式方法论教学（方案 Why/模型原理/检验意义），多轮问答可追问，不代做；规则见 `references/teaching-space.md`
-- **组装空间**（「组装论文」）：多人模式收尾，结构拼接+编译、正文冻结；组装三依据=结构（paper-framework.md）+格式（checklists/contest-format.md）+骨架（cumcm2025_template.tex）；规则见 `references/assembly-space.md`
+- **组装空间**（「组装论文」）：多人模式收尾，结构拼接+编译、正文冻结；组装三依据=结构（paper-framework.md）+格式（checklists/contest-format.md）+骨架（cumcm2026_template.tex）；规则见 `references/assembly-space.md`
 - 打磨与解释空间可在两个窗口同时开启，通过 `.claude/math-modeling/space-chat.md` 跨会话互通（规则见各空间文件）
 
 ## 红线
@@ -52,6 +52,7 @@ description: 数学建模全流程辅助——支持国赛(CUMCM)和美赛(MCM/I
 7. 图表红线：无分析文字不放、正文引用率 100%、图编号由 LaTeX 管理（代码不硬编码）
 8. 绝不在 md 交付物写 LaTeX 命令
 9. AI 合规（国赛新规）自查只做检测与提示（AI 痕迹/声明匹配/人工核验），不代用户删改内容、不代记 AI 交互
+10. 国赛论文必须如实声明 AI 使用（`\CumcmAIUsed`，参考文献前）+ 附《AI工具使用详情.pdf》（2026-09-01 试行规定）；文风自检只改表达，禁止删除/弱化声明或隐瞒 AI 使用（视同违规，可被取消评奖资格）
 
 ## 依赖
 
@@ -63,7 +64,7 @@ description: 数学建模全流程辅助——支持国赛(CUMCM)和美赛(MCM/I
 
 ## AI 交互记录
 
-由用户自行记录（AI 不主动收集、不代记）；用户提交记录时 AI 协助排版（国赛 AI 使用说明附录 / 美赛 Report on Use of AI）；Phase 5 提醒一次。
+由用户自行记录（AI 不主动收集、不代记）；用户提交记录时 AI 协助排版（国赛：参考文献前的 AI 工具使用声明 + 支撑材料《AI工具使用详情.pdf》，模板见 `references/cumcm-template/ai-usage-detail-template.tex` / 美赛：Report on Use of AI）；Phase 5 提醒一次。
 
 ## 快速参考：国赛 vs 美赛
 
